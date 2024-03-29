@@ -1,9 +1,17 @@
-from __future__ import annotations
+from __future__ import absolute_import, annotations
 
 from datetime import datetime
+from typing import List, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
+OrdersType = List[Union[Tuple[str, float], Tuple[str, float, float]]]
+DatetimeType = Union[datetime, str, float]
+StrikeType = Union[str, float]
+
+DEFAULT_START = '2000-01-01'
+DEFAULT_END = 'now'
 
 
 def from_ts_to_dt(timestamp: int | float, milliseconds: bool = True) -> datetime:

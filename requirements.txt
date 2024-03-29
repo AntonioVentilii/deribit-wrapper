@@ -1,0 +1,7 @@
+wheel
+twine
+requests
+numpy
+pandas
+urllib3
+progressbar2

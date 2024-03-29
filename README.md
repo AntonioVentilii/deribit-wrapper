@@ -52,18 +52,21 @@ client = DeribitClient(client_id='your_client_id', client_secret='your_client_se
 - **Get Currencies:** `get_currencies()`
 - **Get Ticker Information:** `get_ticker(asset)`
 - **Get Book Summary by Currency:** `get_complete_market_book()`
+- and more...
 
 ### Account Information
 
 - **Authenticate:** Automatically handled during requests to private endpoints.
 - **Get Account Summary:** `get_account_summary(currency)`
 - **Get Positions:** `get_positions(currency, kind)`
+- and more...
 
 ### Trading
 
 - **Place an Order:** `order(asset, amount, limit=None, label=None, reduce_only=False)`
 - **Place a Market Order:** `market_order(asset, amount, label=None, reduce_only=False)`
 - **Bulk Orders:** `bulk_order(orders, label=None)`
+- and more...
 
 ## Examples
 

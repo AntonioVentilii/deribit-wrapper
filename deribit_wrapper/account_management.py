@@ -34,6 +34,11 @@ class AccountManagement(MarketData):
             ret = pd.concat([ret, pd.DataFrame(r)], ignore_index=True)
         return ret
 
+    def get_margin_model(self, currency: str | list[str] = None) -> pd.DataFrame:
+        df = self.get_account_summary(currency)
+        df = df[['currency', 'margin_model', 'portfolio_margining_enabled', 'cross_collateral_enabled']]
+        return df
+
     def get_positions(self, currency: str | list[str] = None, kind: str = None) -> pd.DataFrame:
         uri = self.__GET_POSITIONS
         params = {'currency': ''}

@@ -16,7 +16,7 @@ class Authentication(DeribitBase):
     def __init__(self, env: str = 'prod', client_id: str = None, client_secret: str = None):
         super().__init__(env=env)
         if not client_id or not client_secret:
-            print('Client ID or Client Secret not provided. Token will not be generated. Private requests will fail.')
+            print('Client ID or Client Secret not provided. Only \'public\' requests will be available.')
         self.client_id = client_id
         self.client_secret = client_secret
 

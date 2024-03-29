@@ -139,6 +139,11 @@ class MarketData(Authentication):
         ret = r
         return ret
 
+    def get_base_currency(self, instrument: str) -> str:
+        r = self.get_instrument(instrument)
+        ret = r['base_currency']
+        return ret
+
     def get_min_trade_amount(self, instrument: str) -> float:
         r = self.get_instrument(instrument)
         ret = r['min_trade_amount']

@@ -13,6 +13,8 @@ class DeribitBase(object):
 
     def __init__(self, env: str = 'prod'):
         super().__init__()
+        if env not in self.__ENVS:
+            raise ValueError(f'Environment \'{env}\' not supported. Supported environments: {self.__ENVS.keys()}')
         self._env = env
 
     @property

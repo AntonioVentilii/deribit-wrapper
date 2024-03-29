@@ -5,13 +5,14 @@ from datetime import datetime
 import pandas as pd
 
 from .market_data import MarketData
-from .utilities import DEFAULT_END, DEFAULT_START, from_dt_to_ts
+from .utilities import DEFAULT_END, DEFAULT_START, MarketOrderType, from_dt_to_ts
 
 
 class AccountManagement(MarketData):
     __GET_ACCOUNT_SUMMARY = '/private/get_account_summary'
     __GET_POSITIONS = '/private/get_positions'
     __GET_TRANSACTION_LOG = '/private/get_transaction_log'
+    __GET_PORTFOLIO_MARGINS = '/private/get_portfolio_margins'
 
     def __init__(self, client_id: str = None, client_secret: str = None, env: str = 'prod',
                  progress_bar_desc: str = None):
@@ -96,3 +97,22 @@ class AccountManagement(MarketData):
         start = start or DEFAULT_START
         end = end or DEFAULT_END
         return self.get_transaction_log(start, end, currency, query=['deposit', 'transfer'])
+
+    def get_portfolio_margins(self, orders: list[MarketOrderType], add_positions: bool = True) -> dict:
+        uri = self.__GET_PORTFOLIO_MARGINS
+        data = {}
+        for instrument, amount in orders:
+            currency = self.get_base_currency(instrument)
+            if currency not in data:
+                data[currency] = {}
+            data[currency][instrument] = amount
+        ret = {}
+        for currency, simulated_positions in data.items():
+            params = {
+                'currency': currency,
+                'simulated_positions': simulated_positions,
+                'add_positions': add_positions,
+            }
+            r = self._request(uri, params)
+            ret[currency] = r
+        return ret

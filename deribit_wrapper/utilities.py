@@ -6,7 +6,9 @@ from typing import List, Tuple, Union
 import numpy as np
 import pandas as pd
 
-OrdersType = List[Union[Tuple[str, float], Tuple[str, float, float]]]
+MarketOrderType = Tuple[str, float]
+LimitOrderType = Tuple[str, float, float]
+OrdersType = List[Union[MarketOrderType, LimitOrderType]]
 DatetimeType = Union[datetime, str, float]
 StrikeType = Union[str, float]
 

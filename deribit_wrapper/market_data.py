@@ -229,10 +229,12 @@ class MarketData(Authentication):
 
     def last_price(self, asset: str) -> float:
         ticker = self.get_ticker(asset)
-        ret = ticker['last_price']
+        ret = ticker.get('last_price')
         if ret is None:
-            ret = ticker['mark_price']
+            ret = ticker.get('mark_price')
             logging.warning(f'Using mark price instead of last price for asset {asset}.')
+        if ret is None:
+            raise Exception(f'No price available for asset {asset}.')
         return ret
 
     def mid_price(self, asset: str) -> float:

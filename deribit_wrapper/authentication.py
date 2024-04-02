@@ -2,12 +2,14 @@ from __future__ import absolute_import, annotations
 
 import json
 import time
+import warnings
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from .base import DeribitBase
+from .exceptions import DeribitClientWarning
 
 
 class Authentication(DeribitBase):
@@ -15,10 +17,24 @@ class Authentication(DeribitBase):
 
     def __init__(self, env: str = 'prod', client_id: str = None, client_secret: str = None):
         super().__init__(env=env)
+        self._client_id = None
+        self._client_secret = None
+        self.set_credentials(client_id, client_secret)
+
+    @property
+    def client_id(self) -> str:
+        return self._client_id
+
+    @property
+    def client_secret(self) -> str:
+        return self._client_secret
+
+    def set_credentials(self, client_id: str, client_secret: str):
         if not client_id or not client_secret:
-            print('Client ID or Client Secret not provided. Only \'public\' requests will be available.')
-        self.client_id = client_id
-        self.client_secret = client_secret
+            txt = 'Client ID or Client Secret not provided. Only \'public\' requests will be available.'
+            warnings.warn(txt, DeribitClientWarning)
+        self._client_id = client_id
+        self._client_secret = client_secret
 
     @property
     def _session(self):

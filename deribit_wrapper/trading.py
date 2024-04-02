@@ -77,6 +77,51 @@ class Trading(AccountManagement):
     def get_entire_trade_history(self, include_order_data: bool = False) -> pd.DataFrame:
         return self.get_trade_history(include_order_data=include_order_data)
 
+    def _error_handler(self, ret: dict, uri: str, params: dict, exclude_codes: list[int] = None) -> dict:
+        exclude_codes = exclude_codes or []
+        code = ret.get('code')
+
+        # 0: no error
+        if code == 0 or code is None:
+            pass
+
+        # 10009: not enough funds
+        elif code == 10009 and 10009 not in exclude_codes:
+            if params.get('reduce_only'):
+                print('Not enough funds. Already tried as reduce only.')
+            else:
+                params['reduce_only'] = True
+                max_attempts = 3
+                for i in range(max_attempts):
+                    print(f'Not enough funds. Attempt {i + 1} of {max_attempts} as reduce only...')
+                    ret = self._order_with_error_handling(uri, params, exclude_codes=[10009])
+                    code = ret.get('code')
+                    if code != 10009:
+                        break
+
+        # 10041: settlement in progress
+        elif code == 10041 and 10041 not in exclude_codes:
+            max_attempts = 60
+            for i in range(max_attempts):
+                print('Settlement in progress. Waiting 1 second...')
+                time.sleep(1)
+                ret = self._order_with_error_handling(uri, params, exclude_codes=[10041])
+                code = ret.get('code')
+                if code != 10041:
+                    break
+
+        else:
+            print(f'Error code {code} not handled yet.')
+
+        return ret
+
+    def _order_with_error_handling(self, uri: str, params: dict, handle_error: bool = True,
+                                   exclude_codes: list[int] = None) -> dict:
+        ret = self._request(uri, params)
+        if handle_error:
+            ret = self._error_handler(ret, uri, params, exclude_codes=exclude_codes)
+        return ret
+
     def _order(self, asset: str, amount: float | int, limit: float | int = None, label: str = None,
                reduce_only: bool = False) -> dict:
         label = None if label == '' else label
@@ -112,12 +157,7 @@ class Trading(AccountManagement):
                 params['price'] = limit
             if label is not None:
                 params['label'] = label
-            r = self._request(uri, params)
-            ret = r
-            while ret.get('code') == 10041:
-                time.sleep(1)
-                r = self._request(uri, params)
-                ret = r
+            ret = self._order_with_error_handling(uri, params)
         return ret
 
     def order(self, asset: str, amount: float | int, limit: float | int = None, label: str = None,

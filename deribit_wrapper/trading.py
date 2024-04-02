@@ -64,7 +64,7 @@ class Trading(AccountManagement):
     def add_order_data(self, trades: pd.DataFrame) -> pd.DataFrame:
         order_ids = list(set(trades['order_id']))
         orders = self.get_orders(order_ids)
-        trades = trades.merge(orders, how='left', on='order_id', suffixes=(None, '_duplicate'))
+        trades = trades.merge(orders, how='left', on='order_id', suffixes=(None, '_duplicate_from_orders_data'))
         return trades
 
     def get_trade_history(self, start: str | datetime = None, end: str | datetime = None,
@@ -76,6 +76,7 @@ class Trading(AccountManagement):
             if include_order_data:
                 results = self.add_order_data(results)
         results.sort_values('timestamp', inplace=True)
+        results['id'] = results['id'].astype(int, errors='ignore')
         return results
 
     def get_entire_trade_history(self, include_order_data: bool = False) -> pd.DataFrame:

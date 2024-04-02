@@ -10,12 +10,18 @@ class DeribitBase(object):
         'prod': 'https://www.deribit.com'
     }
     __API_URL = '/api/v2'
+    _instance_count = 0  # Class variable to keep track of the number of instances
 
-    def __init__(self, env: str = 'prod'):
+    def __init__(self, env: str = 'prod', instance_name: str = None):
         super().__init__()
         if env not in self.__ENVS:
             raise ValueError(f'Environment \'{env}\' not supported. Supported environments: {self.__ENVS.keys()}')
         self._env = env
+        if instance_name is None:
+            DeribitBase._instance_count += 1
+            self.instance_name = f"Instance_{DeribitBase._instance_count}"
+        else:
+            self.instance_name = instance_name
 
     @property
     def env(self):

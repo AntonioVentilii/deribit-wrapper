@@ -10,7 +10,7 @@ class DeribitBase(object):
         'prod': 'https://www.deribit.com'
     }
     __API_URL = '/api/v2'
-    _instance_count = 0  # Class variable to keep track of the number of instances
+    _instance_count = 0  # Class variable to keep track of the instance number
 
     def __init__(self, env: str = 'prod', instance_name: str = None):
         super().__init__()

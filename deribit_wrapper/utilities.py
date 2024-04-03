@@ -1,7 +1,7 @@
 from __future__ import absolute_import, annotations
 
 from datetime import datetime
-from typing import List, Tuple, Union
+from typing import List, Literal, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -11,6 +11,8 @@ LimitOrderType = Tuple[str, float, float]
 OrdersType = List[Union[MarketOrderType, LimitOrderType]]
 DatetimeType = Union[datetime, str, float]
 StrikeType = Union[str, float]
+
+ScopeType = Literal['read', 'read_write', 'none']
 
 DEFAULT_START = '2000-01-01'
 DEFAULT_END = 'now'

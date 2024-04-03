@@ -115,7 +115,7 @@ class Trading(AccountManagement):
                 if code != 10041:
                     break
 
-        else:
+        elif code not in exclude_codes:
             print(f'Error code {code} not handled yet.')
 
         return ret

@@ -82,6 +82,12 @@ class Authentication(DeribitBase):
                     for i in range(max_attempts):
                         print(f'Invalid token. Trying to get a new one. Attempt {i + 1} of {max_attempts}...')
                         ret = self._request(uri, params, give_results=give_results)
+                elif error_code == 13028:
+                    max_attempts = 60
+                    for i in range(max_attempts):
+                        print(f'Temporarily unavailable. Waiting 1 minute [{i + 1}/{max_attempts}]...')
+                        time.sleep(60)
+                        ret = self._request(uri, params, give_results=give_results)
                 else:
                     print(f'Error code {error_code} for request {uri} with params {params}.')
                     print(ret)

@@ -62,8 +62,7 @@ class MarketData(Authentication):
         return ret
 
     def get_currencies(self) -> list[dict]:
-        r = self._request(self.__GET_CURRENCY_URI, {})
-        ret = r.json()['result']
+        ret = self._request(self.__GET_CURRENCY_URI, {})
         return ret
 
     @property

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This Python script provides a comprehensive client for interacting with the Deribit API.
+This Python script provides a comprehensive client for interacting with the [Deribit API](https://docs.deribit.com/).
 It encapsulates functionality for both public and private endpoints, covering market data, account information, trading
 operations, and more.
 It supports both the production and test environments, making it suitable for developers at all stages of application

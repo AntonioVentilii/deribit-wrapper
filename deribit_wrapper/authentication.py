@@ -88,6 +88,10 @@ class Authentication(DeribitBase):
                         print(f'Temporarily unavailable. Waiting 1 minute [{i + 1}/{max_attempts}]...')
                         time.sleep(60)
                         ret = self._request(uri, params, give_results=give_results)
+                        if ret.get('code') != 13028:
+                            break
+                    if ret.get('code') == 13028:
+                        raise Exception('Service temporarily unavailable.')
                 else:
                     print(f'Error code {error_code} for request {uri} with params {params}.')
                     print(ret)

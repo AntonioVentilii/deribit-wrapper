@@ -71,7 +71,7 @@ class AccountManagement(MarketData):
         end_ts = from_dt_to_ts(pd.to_datetime(end, utc=True))
         params['start_timestamp'] = start_ts
         params['end_timestamp'] = end_ts
-        results = pd.DataFrame(columns=['timestamp'])
+        results = pd.DataFrame()
         for q in query:
             if q is not None:
                 params['query'] = q

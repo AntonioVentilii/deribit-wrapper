@@ -75,8 +75,8 @@ class Trading(AccountManagement):
         if not results.empty:
             if include_order_data:
                 results = self.add_order_data(results)
-        results.sort_values('timestamp', inplace=True)
-        results['id'] = results['id'].astype(int, errors='ignore')
+            results.sort_values('timestamp', inplace=True)
+            results['id'] = results['id'].astype(int, errors='ignore')
         return results
 
     def get_entire_trade_history(self, include_order_data: bool = False) -> pd.DataFrame:

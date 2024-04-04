@@ -86,26 +86,24 @@ class Trading(AccountManagement):
         exclude_codes = exclude_codes or []
         code = ret.get('code')
 
+        if code in exclude_codes:
+            return ret
+
         # 0: no error
         if code == 0 or code is None:
             pass
 
         # 10009: not enough funds
-        elif code == 10009 and 10009 not in exclude_codes:
+        elif code == 10009:
             if params.get('reduce_only'):
                 print('Not enough funds. Already tried as reduce only.')
             else:
+                print(f'Not enough funds. Attempt as reduce only...')
                 params['reduce_only'] = True
-                max_attempts = 3
-                for i in range(max_attempts):
-                    print(f'Not enough funds. Attempt {i + 1} of {max_attempts} as reduce only...')
-                    ret = self._order_with_error_handling(uri, params, exclude_codes=[10009])
-                    code = ret.get('code')
-                    if code != 10009:
-                        break
+                ret = self._order_with_error_handling(uri, params, exclude_codes=[10009])
 
         # 10041: settlement in progress
-        elif code == 10041 and 10041 not in exclude_codes:
+        elif code == 10041:
             max_attempts = 60
             for i in range(max_attempts):
                 print('Settlement in progress. Waiting 1 second...')
@@ -115,7 +113,7 @@ class Trading(AccountManagement):
                 if code != 10041:
                     break
 
-        elif code not in exclude_codes:
+        else:
             print(f'Error code {code} not handled yet.')
 
         return ret

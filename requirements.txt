@@ -8,3 +8,4 @@ progressbar2
 pytest
 pytest-mock
 python-dotenv
+tabulate

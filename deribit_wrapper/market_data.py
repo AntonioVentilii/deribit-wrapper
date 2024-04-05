@@ -68,8 +68,9 @@ class MarketData(Authentication):
     @property
     def currencies(self) -> list[str]:
         df = pd.DataFrame(self.get_currencies())
-        currency = list(df['currency'])
-        return currency
+        currency_list = list(df['currency'])
+        sorted_currency_list = sorted(currency_list)
+        return sorted_currency_list
 
     def get_complete_market_book(self) -> pd.DataFrame:
         uri = self.__GET_BOOK_BY_CURRENCY_URI

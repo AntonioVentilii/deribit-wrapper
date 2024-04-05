@@ -1,10 +1,12 @@
 from __future__ import absolute_import, annotations
 
 from datetime import datetime
-from typing import List, Literal, Tuple, Union
+from typing import List, Literal, Tuple, Union, get_args
 
 import numpy as np
 import pandas as pd
+
+ParamsType = dict[str, Union[str, int, float]]
 
 MarketOrderType = Tuple[str, float]
 LimitOrderType = Tuple[str, float, float]
@@ -13,6 +15,10 @@ DatetimeType = Union[datetime, str, float]
 StrikeType = Union[str, float]
 
 ScopeType = Literal['read', 'read_write', 'none']
+SCOPES = list(get_args(ScopeType))
+
+MarginModelType = Literal['cross_pm', 'cross_sm', 'segregated_pm', 'segregated_sm']
+MARGIN_MODELS = list(get_args(MarginModelType))
 
 DEFAULT_START = '2000-01-01'
 DEFAULT_END = 'now'
@@ -33,3 +39,9 @@ def from_dt_to_ts(date: str | datetime, milliseconds: bool = True) -> int:
     if milliseconds:
         ts *= int(1e3)
     return ts
+
+
+def seconds_to_hms(seconds: int) -> str:
+    h, r = divmod(seconds, 3600)
+    m, s = divmod(r, 60)
+    return f'{h}h {m:02d}m {s:02d}s'

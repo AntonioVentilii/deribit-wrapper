@@ -17,7 +17,8 @@ def name_instrument(currency: str, expiry: DatetimeType, strike: StrikeType = No
         name = '{c}-{t}'
         name = name.format(c=c, t=t)
     else:
-        k = int(strike)
+        k = float(strike)
+        k = int(k) if k.is_integer() else k
         ot = 'c' if opt_type == 'call' else 'p'
         name = '{c}-{t}-{k:d}-{ot}'
         name = name.format(c=c, t=t, k=k, ot=ot)

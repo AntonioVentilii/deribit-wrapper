@@ -7,7 +7,7 @@ import pandas as pd
 
 from dev_scripts.utilities_dev import create_multilevel_df
 from .exceptions import SubaccountNameAlreadyTaken, SubaccountNameWrongFormat, SubaccountError, WaitRequiredError, \
-    SubaccountNotRemovable, SubaccountAlreadyRemoved, InvalidMarginModelError, InvalidParameterError
+    SubaccountNotRemovable, SubaccountAlreadyRemoved, InvalidMarginModelError, InvalidParameterForRequest
 from .market_data import MarketData
 from .utilities import DEFAULT_END, DEFAULT_START, MarginModelType, MarketOrderType, from_dt_to_ts, seconds_to_hms
 
@@ -211,7 +211,7 @@ class AccountManagement(MarketData):
             if param == 'margin_model':
                 raise InvalidMarginModelError(f'Invalid margin model {margin_model}: {reason}')
             else:
-                raise InvalidParameterError(f'Invalid params for request {uri} with param {param}: {reason}')
+                raise InvalidParameterForRequest(f'Invalid params for request {uri} with param {param}: {reason}')
 
         df = create_multilevel_df(r)
         return df

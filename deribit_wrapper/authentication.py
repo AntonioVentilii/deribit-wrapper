@@ -11,7 +11,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from .base import DeribitBase
-from .exceptions import DeribitClientWarning
+from .exceptions import DeribitClientWarning, ServiceUnavailable, RequestError
 from .utilities import ParamsType, ScopeType, seconds_to_hms
 
 
@@ -114,7 +114,7 @@ class Authentication(DeribitBase):
                         if ret.get('code') != 13028:
                             break
                     if ret.get('code') == 13028:
-                        raise Exception('Service temporarily unavailable.')
+                        raise ServiceUnavailable('Service temporarily unavailable.')
 
                 # Error -32602: invalid params
                 elif error_code == -32602:
@@ -126,7 +126,7 @@ class Authentication(DeribitBase):
                     print(f'Error code {error_code} for request {uri} with params {params}.')
                     print(ret)
             else:
-                raise Exception(ret)
+                raise RequestError(ret)
 
             if not isinstance(ret, dict) and not isinstance(ret, list):
                 ret = {'result': ret}

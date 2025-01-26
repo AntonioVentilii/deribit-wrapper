@@ -1,8 +1,7 @@
 class DeribitClientWarning(Warning):
     pass
 
-class InvalidParameterError(Exception):
-    pass
+
 
 
 class InvalidMarginModelError(Exception):
@@ -12,8 +11,22 @@ class InvalidMarginModelError(Exception):
 class WaitRequiredError(Exception):
     pass
 
+
+
 class PriceUnavailableError(Exception):
     pass
+
+
+class RequestError(Exception):
+    pass
+
+
+class ServiceUnavailable(RequestError):
+    pass
+
+class InvalidParameterForRequest(RequestError):
+    pass
+
 
 
 class SubaccountError(Exception):

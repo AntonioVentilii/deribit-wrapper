@@ -4,7 +4,7 @@ import logging
 import time
 
 
-class DeribitBase(object):
+class DeribitBase:
     __ENVS = {
         'test': 'https://test.deribit.com',
         'prod': 'https://www.deribit.com'

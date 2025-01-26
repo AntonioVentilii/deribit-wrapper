@@ -134,8 +134,6 @@ class Authentication(DeribitBase):
         else:
             ret = r
 
-        print(11223423423423432,ret)
-
         return ret
 
     @property

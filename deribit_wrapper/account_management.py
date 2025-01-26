@@ -6,6 +6,8 @@ from datetime import datetime
 import pandas as pd
 
 from dev_scripts.utilities_dev import create_multilevel_df
+from .exceptions import SubaccountNameAlreadyTaken, SubaccountNameWrongFormat, SubaccountError, WaitRequiredError, \
+    SubaccountNotRemovable, SubaccountAlreadyRemoved, InvalidMarginModelError, InvalidParameterError
 from .market_data import MarketData
 from .utilities import DEFAULT_END, DEFAULT_START, MarginModelType, MarketOrderType, from_dt_to_ts, seconds_to_hms
 
@@ -135,7 +137,7 @@ class AccountManagement(MarketData):
 
     def change_subaccount_name(self, subaccount_id: int, name: str) -> dict:
         if len(name) > 32:
-            raise Exception(f"Subaccount name '{name}' is too long, maximum 32 characters.")
+            raise ValueError(f"Subaccount name '{name}' is too long, maximum 32 characters.")
         uri = self.__CHANGE_SUBACCOUNT_NAME
         params = {'sid': subaccount_id, 'name': name}
         r = self._request(uri, params)
@@ -145,11 +147,11 @@ class AccountManagement(MarketData):
         if error_code == 12002:
             data = r.get('data')
             if data == 'already_taken':
-                raise Exception(f"Subaccount name '{name}' is already taken.")
+                raise SubaccountNameAlreadyTaken(f"Subaccount name '{name}' is already taken.")
             elif data == 'wrong_format':
-                raise Exception(f"Subaccount name '{name}' has wrong format.")
+                raise SubaccountNameWrongFormat(f"Subaccount name '{name}' has the wrong format.")
             else:
-                raise Exception(f"Error changing subaccount name to '{name}': {data}.")
+                raise SubaccountError(f"Error changing subaccount name to '{name}': {data}.")
 
         return r
 
@@ -171,20 +173,20 @@ class AccountManagement(MarketData):
                 print()
                 r = self._request(uri, params)
             else:
-                raise Exception(f"Wait {wait} seconds before removing subaccount {subaccount_id}.")
+                raise WaitRequiredError(f"Wait {wait} seconds before removing subaccount {subaccount_id}.")
 
         # Error code 12007: subaccount not removable
         elif error_code == 12007:
             reason = error_data.get('reason')
-            raise Exception(f"Subaccount {subaccount_id} is not removable: {reason}.")
+            raise SubaccountNotRemovable(f"Subaccount {subaccount_id} is not removable: {reason}.")
 
         # Error code 13009: unauthorized
         elif error_code == 13009:
             reason = error_data.get('reason')
             if reason == 'already_removed':
-                raise Exception(f'Subaccount {subaccount_id} already removed.')
+                raise SubaccountAlreadyRemoved(f'Subaccount {subaccount_id} already removed.')
             else:
-                raise Exception(f'Unauthorized to remove subaccount {subaccount_id}: {reason}.')
+                raise SubaccountError(f'Unauthorized to remove subaccount {subaccount_id}: {reason}.')
 
         return r
 
@@ -207,9 +209,9 @@ class AccountManagement(MarketData):
             param = error_data.get('param')
             reason = error_data.get('reason')
             if param == 'margin_model':
-                raise Exception(f'Invalid margin model {margin_model}: {reason}')
+                raise InvalidMarginModelError(f'Invalid margin model {margin_model}: {reason}')
             else:
-                raise Exception(f'Invalid params for request {uri} with param {param}: {reason}')
+                raise InvalidParameterError(f'Invalid params for request {uri} with param {param}: {reason}')
 
         df = create_multilevel_df(r)
         return df

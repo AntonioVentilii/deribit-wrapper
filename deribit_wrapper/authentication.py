@@ -134,6 +134,8 @@ class Authentication(DeribitBase):
         else:
             ret = r
 
+        print(11223423423423432,ret)
+
         return ret
 
     @property
@@ -210,7 +212,7 @@ class Authentication(DeribitBase):
     def get_time(self) -> int:
         uri = self.__GET_TIME
         r = self._request(uri, {})
-        return r
+        return r['result']
 
     def get_status(self) -> dict:
         uri = self.__STATUS

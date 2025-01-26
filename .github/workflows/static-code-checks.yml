@@ -1,0 +1,137 @@
+name: Static Code Checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  release:
+    types: [ created ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint
+        run: |
+          pylint
+
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check
+        run: |
+          pyflakes
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test
+        env:
+          TEST_CLIENT_ID: ${{ secrets.TEST_CLIENT_ID }}
+          TEST_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+        run: |
+          pytest
+
+      - name: Lint
+        run: |
+          pylint
+
+      - name: Check
+        run: |
+          pyflakes
+
+      - name: Docs style
+        run: |
+          pydocstyle
+
+  docs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Docs style
+        run: |
+          pydocstyle
+
+  may-merge:
+    if: always()
+    needs: [ 'lint', 'check', 'test', 'docs' ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+    steps:
+      - name: Cleared for merging
+        run: |
+          if [ "${{ needs.lint.result }}" == "success" ] && [ "${{ needs.check.result }}" == "success" ] && [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.docs.result }}" == "success" ]; then
+            echo "This PR is cleared for merging"
+          else
+            echo "This PR is not cleared for merging"
+            exit 1
+          fi

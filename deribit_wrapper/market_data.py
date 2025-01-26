@@ -7,6 +7,7 @@ import pandas as pd
 from progressbar import progressbar
 
 from .authentication import Authentication
+from .exceptions import PriceUnavailableError
 from .utilities import DEFAULT_END, DEFAULT_START, DatetimeType, OrdersType, StrikeType, from_dt_to_ts, from_ts_to_dt
 
 
@@ -58,7 +59,7 @@ class MarketData(Authentication):
         try:
             ret = r['contract_size']
         except KeyError:
-            logging.warning('No result found for asset {}.'.format(asset))
+            logging.warning('No result found for asset %s.', asset)
             return {}
         return ret
 
@@ -233,9 +234,9 @@ class MarketData(Authentication):
         ret = ticker.get('last_price')
         if ret is None:
             ret = ticker.get('mark_price')
-            logging.warning(f'Using mark price instead of last price for asset {asset}.')
+            logging.warning('Using mark price instead of last price for asset %s.', asset)
         if ret is None:
-            raise Exception(f'No price available for asset {asset}.')
+            raise PriceUnavailableError(f'No price available for asset {asset}.')
         return ret
 
     def mid_price(self, asset: str) -> float:
@@ -246,13 +247,13 @@ class MarketData(Authentication):
             mark = ticker['mark_price']
             bid = mark
             ask = mark
-            logging.warning(f'Using mark price instead of mid price for asset {asset}.')
+            logging.warning('Using mark price instead of mid price for asset %s.', asset)
         elif bid is None:
             bid = ask
-            logging.warning(f'No bid available for mid calculation for asset {asset}.')
+            logging.warning('No bid available for mid calculation for asset %s.', asset)
         elif ask is None:
             ask = bid
-            logging.warning(f'No ask available for mid calculation for asset {asset}.')
+            logging.warning('No ask available for mid calculation for asset %s.', asset)
         ret = (bid + ask) / 2
         return ret
 

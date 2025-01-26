@@ -12,6 +12,9 @@ class InvalidMarginModelError(Exception):
 class WaitRequiredError(Exception):
     pass
 
+class PriceUnavailableError(Exception):
+    pass
+
 
 class SubaccountError(Exception):
     pass

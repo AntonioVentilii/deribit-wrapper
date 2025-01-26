@@ -241,7 +241,7 @@ class AccountManagement(MarketData):
         for c in currency:
             params['currency'] = c
             r = self._request(uri, params)
-            ret = ret.append(pd.DataFrame(r), ignore_index=True)
+            ret = pd.concat([ret, pd.DataFrame(r)], ignore_index=True)
         return ret
 
     def get_transaction_log(self, start: str | datetime = None, end: str | datetime = None,

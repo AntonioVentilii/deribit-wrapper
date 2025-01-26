@@ -107,7 +107,8 @@ class Authentication(DeribitBase):
         if error_code == -32602:
             self._handle_invalid_params(uri, error_data)
         else:
-            print(f'Error code {error_code} for request {uri} with params {params}.')
+            sanitized_params = {k: (v if k != 'client_secret' else '***') for k, v in params.items()}
+            print(f'Error code {error_code} for request {uri} with params {sanitized_params}.')
             print(error_data)
         return {}
 

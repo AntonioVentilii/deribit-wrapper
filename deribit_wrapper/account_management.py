@@ -148,10 +148,9 @@ class AccountManagement(MarketData):
             data = r.get('data')
             if data == 'already_taken':
                 raise SubaccountNameAlreadyTaken(f"Subaccount name '{name}' is already taken.")
-            elif data == 'wrong_format':
+            if data == 'wrong_format':
                 raise SubaccountNameWrongFormat(f"Subaccount name '{name}' has the wrong format.")
-            else:
-                raise SubaccountError(f"Error changing subaccount name to '{name}': {data}.")
+            raise SubaccountError(f"Error changing subaccount name to '{name}': {data}.")
 
         return r
 
@@ -210,8 +209,7 @@ class AccountManagement(MarketData):
             reason = error_data.get('reason')
             if param == 'margin_model':
                 raise InvalidMarginModelError(f'Invalid margin model {margin_model}: {reason}')
-            else:
-                raise InvalidParameterForRequest(f'Invalid params for request {uri} with param {param}: {reason}')
+            raise InvalidParameterForRequest(f'Invalid params for request {uri} with param {param}: {reason}')
 
         df = create_multilevel_df(r)
         return df

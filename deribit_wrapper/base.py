@@ -29,11 +29,11 @@ class DeribitBase(object):
 
     @env.setter
     def env(self, value):
-        logging.warning(f'Changing environment from {self.env} to {value}. You have 10 seconds to abort...')
+        logging.warning('Changing environment from %s to %s. You have 10 seconds to abort...', self.env, value)
         for _ in range(10):
             time.sleep(1)
         self._env = value
-        logging.warning(f'Environment changed to {self.env}.')
+        logging.warning('Environment changed to %s.', self.env)
 
     @property
     def api_url(self):

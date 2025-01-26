@@ -23,7 +23,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.7',
+    python_requires='>=3.10',
     url='https://github.com/AntonioVentilii/deribit-wrapper',
     project_urls={
         'Source Code': 'https://github.com/AntonioVentilii/deribit-wrapper',

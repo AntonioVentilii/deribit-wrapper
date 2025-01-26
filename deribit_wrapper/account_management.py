@@ -255,10 +255,8 @@ class AccountManagement(MarketData):
             currency = self.currencies
         elif not isinstance(currency, list):
             currency = [currency]
-        start_ts = from_dt_to_ts(pd.to_datetime(start, utc=True))
-        end_ts = from_dt_to_ts(pd.to_datetime(end, utc=True))
-        params['start_timestamp'] = start_ts
-        params['end_timestamp'] = end_ts
+        params['start_timestamp'] = from_dt_to_ts(pd.to_datetime(start, utc=True))
+        params['end_timestamp'] = from_dt_to_ts(pd.to_datetime(end, utc=True))
         results = pd.DataFrame()
         for q in query:
             if q is not None:

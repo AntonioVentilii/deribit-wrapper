@@ -84,47 +84,7 @@ class Authentication(DeribitBase):
                 ret = ret['error']
                 error_code = ret.get('code')
                 error_data = ret.get('data', {})
-
-                # Error 10028: too many requests
-                if error_code == 10028:
-                    wait = error_data.get('wait', 1)
-                    print(f'Too many requests for URI {uri}. Waiting {seconds_to_hms(wait)}...')
-                    for i in range(wait):
-                        time.sleep(1)
-                        print(f"Wait {seconds_to_hms(wait - i)}...", end='\r', flush=True)
-                    print()
-                    ret = self._request(uri, params, give_results=give_results)
-
-                # Error 13009: unauthorized
-                elif error_code == 13009:
-                    reason = error_data.get('reason')
-                    if reason == 'invalid_token':
-                        max_attempts = 3
-                        for i in range(max_attempts):
-                            print(f'Invalid token. Trying to get a new one. Attempt {i + 1} of {max_attempts}...')
-                            ret = self._request(uri, params, give_results=give_results)
-
-                # Error 13028: temporarily unavailable
-                elif error_code == 13028:
-                    max_attempts = 60
-                    for i in range(max_attempts):
-                        print(f'Temporarily unavailable. Waiting 1 minute [{i + 1}/{max_attempts}]...')
-                        time.sleep(60)
-                        ret = self._request(uri, params, give_results=give_results)
-                        if ret.get('code') != 13028:
-                            break
-                    if ret.get('code') == 13028:
-                        raise ServiceUnavailable('Service temporarily unavailable.')
-
-                # Error -32602: invalid params
-                elif error_code == -32602:
-                    param = error_data.get('param')
-                    reason = error_data.get('reason')
-                    print(f'Invalid params for request {uri} with param {param}: {reason}')
-
-                else:
-                    print(f'Error code {error_code} for request {uri} with params {params}.')
-                    print(ret)
+                return self._handle_error(uri, params, error_code, error_data, give_results=give_results)
             else:
                 raise RequestError(ret)
 
@@ -135,6 +95,54 @@ class Authentication(DeribitBase):
             ret = r
 
         return ret
+
+    def _handle_error(self, uri: str, params: ParamsType, error_code: int, error_data: dict,
+                      give_results: bool) -> dict:
+        if error_code == 10028:
+            return self._handle_too_many_requests(uri, params, error_data, give_results=give_results)
+        if error_code == 13009:
+            return self._handle_unauthorised(uri, params, error_data, give_results=give_results)
+        if error_code == 13028:
+            return self._handle_temporarily_unavailable(uri, params, give_results=give_results)
+        if error_code == -32602:
+            self._handle_invalid_params(uri, error_data)
+        else:
+            print(f'Error code {error_code} for request {uri} with params {params}.')
+            print(error_data)
+        return {}
+
+    def _handle_too_many_requests(self, uri: str, params: ParamsType, error_data: dict, give_results: bool) -> dict:
+        wait = error_data.get('wait', 1)
+        print(f'Too many requests for URI {uri}. Waiting {seconds_to_hms(wait)}...')
+        for i in range(wait):
+            time.sleep(1)
+            print(f"Wait {seconds_to_hms(wait - i)}...", end='\r', flush=True)
+        print()
+        return self._request(uri, params, give_results=give_results)
+
+    def _handle_unauthorised(self, uri: str, params: ParamsType, error_data: dict, give_results: bool) -> dict:
+        reason = error_data.get('reason')
+        if reason == 'invalid_token':
+            max_attempts = 3
+            for i in range(max_attempts):
+                print(f'Invalid token. Trying to get a new one. Attempt {i + 1} of {max_attempts}...')
+                return self._request(uri, params, give_results=give_results)
+        return {}
+
+    def _handle_temporarily_unavailable(self, uri: str, params: ParamsType, give_results: bool) -> dict:
+        max_attempts = 60
+        for i in range(max_attempts):
+            print(f'Temporarily unavailable. Waiting 1 minute [{i + 1}/{max_attempts}]...')
+            time.sleep(60)
+            ret = self._request(uri, params, give_results=give_results)
+            if ret.get('code') != 13028:
+                return ret
+        raise ServiceUnavailable('Service temporarily unavailable.')
+
+    def _handle_invalid_params(self, uri: str, error_data: dict):
+        param = error_data.get('param')
+        reason = error_data.get('reason')
+        print(f'Invalid params for request {uri}: param={param}, reason={reason}')
 
     @property
     def access_token(self) -> str:

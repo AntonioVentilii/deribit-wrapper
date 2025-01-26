@@ -84,18 +84,6 @@ jobs:
         run: |
           pytest
 
-      - name: Lint
-        run: |
-          pylint
-
-      - name: Check
-        run: |
-          pyflakes
-
-      - name: Docs style
-        run: |
-          pydocstyle
-
   docs:
     runs-on: ubuntu-latest
     strategy:

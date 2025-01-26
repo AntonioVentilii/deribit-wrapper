@@ -7,7 +7,7 @@ import pandas as pd
 
 from dev_scripts.utilities_dev import create_multilevel_df
 from .exceptions import SubaccountNameAlreadyTaken, SubaccountNameWrongFormat, SubaccountError, WaitRequiredError, \
-    SubaccountNotRemovable, SubaccountAlreadyRemoved, InvalidMarginModelError, InvalidParameterError
+    SubaccountNotRemovable, SubaccountAlreadyRemoved, InvalidMarginModelError, InvalidParameterForRequest
 from .market_data import MarketData
 from .utilities import DEFAULT_END, DEFAULT_START, MarginModelType, MarketOrderType, from_dt_to_ts, seconds_to_hms
 
@@ -148,10 +148,9 @@ class AccountManagement(MarketData):
             data = r.get('data')
             if data == 'already_taken':
                 raise SubaccountNameAlreadyTaken(f"Subaccount name '{name}' is already taken.")
-            elif data == 'wrong_format':
+            if data == 'wrong_format':
                 raise SubaccountNameWrongFormat(f"Subaccount name '{name}' has the wrong format.")
-            else:
-                raise SubaccountError(f"Error changing subaccount name to '{name}': {data}.")
+            raise SubaccountError(f"Error changing subaccount name to '{name}': {data}.")
 
         return r
 
@@ -185,8 +184,7 @@ class AccountManagement(MarketData):
             reason = error_data.get('reason')
             if reason == 'already_removed':
                 raise SubaccountAlreadyRemoved(f'Subaccount {subaccount_id} already removed.')
-            else:
-                raise SubaccountError(f'Unauthorized to remove subaccount {subaccount_id}: {reason}.')
+            raise SubaccountError(f'Unauthorized to remove subaccount {subaccount_id}: {reason}.')
 
         return r
 
@@ -210,8 +208,7 @@ class AccountManagement(MarketData):
             reason = error_data.get('reason')
             if param == 'margin_model':
                 raise InvalidMarginModelError(f'Invalid margin model {margin_model}: {reason}')
-            else:
-                raise InvalidParameterError(f'Invalid params for request {uri} with param {param}: {reason}')
+            raise InvalidParameterForRequest(f'Invalid params for request {uri} with param {param}: {reason}')
 
         df = create_multilevel_df(r)
         return df
@@ -258,10 +255,8 @@ class AccountManagement(MarketData):
             currency = self.currencies
         elif not isinstance(currency, list):
             currency = [currency]
-        start_ts = from_dt_to_ts(pd.to_datetime(start, utc=True))
-        end_ts = from_dt_to_ts(pd.to_datetime(end, utc=True))
-        params['start_timestamp'] = start_ts
-        params['end_timestamp'] = end_ts
+        params['start_timestamp'] = from_dt_to_ts(pd.to_datetime(start, utc=True))
+        params['end_timestamp'] = from_dt_to_ts(pd.to_datetime(end, utc=True))
         results = pd.DataFrame()
         for q in query:
             if q is not None:

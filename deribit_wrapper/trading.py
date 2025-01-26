@@ -105,7 +105,7 @@ class Trading(AccountManagement):
         # 10041: settlement in progress
         elif code == 10041:
             max_attempts = 60
-            for i in range(max_attempts):
+            for _ in range(max_attempts):
                 print('Settlement in progress. Waiting 1 second...')
                 time.sleep(1)
                 ret = self._order_with_error_handling(uri, params, exclude_codes=[10041])
@@ -168,6 +168,7 @@ class Trading(AccountManagement):
         self.check_min_trade_amount([(asset, amount)])
         try:
             ret = self._order(asset, amount, limit=limit, label=label, reduce_only=reduce_only)
+        # pylint: disable=broad-except
         except Exception as e:
             ret = {'error': str(e)}
         return ret

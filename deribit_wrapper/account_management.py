@@ -184,8 +184,7 @@ class AccountManagement(MarketData):
             reason = error_data.get('reason')
             if reason == 'already_removed':
                 raise SubaccountAlreadyRemoved(f'Subaccount {subaccount_id} already removed.')
-            else:
-                raise SubaccountError(f'Unauthorized to remove subaccount {subaccount_id}: {reason}.')
+            raise SubaccountError(f'Unauthorized to remove subaccount {subaccount_id}: {reason}.')
 
         return r
 

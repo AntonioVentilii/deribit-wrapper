@@ -98,7 +98,7 @@ class Trading(AccountManagement):
             if params.get('reduce_only'):
                 print('Not enough funds. Already tried as reduce only.')
             else:
-                print(f'Not enough funds. Attempt as reduce only...')
+                print('Not enough funds. Attempt as reduce only...')
                 params['reduce_only'] = True
                 ret = self._order_with_error_handling(uri, params, exclude_codes=[10009])
 

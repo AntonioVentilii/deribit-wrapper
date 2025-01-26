@@ -1,0 +1,20 @@
+[MAIN]
+
+ignore=
+    dev_scripts,
+    tests,
+
+[MESSAGES-CONTROL]
+
+disable=
+    missing-function-docstring,
+    missing-module-docstring,
+    missing-class-docstring,
+
+[FORMAT]
+
+max-line-length=120
+
+[DESIGN]
+
+max-args=10

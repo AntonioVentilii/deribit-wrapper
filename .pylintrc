@@ -34,3 +34,7 @@ max-args=10
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=30
+
+[MESSAGES CONTROL]
+
+disable=too-many-positional-arguments

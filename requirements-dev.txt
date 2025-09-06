@@ -2,4 +2,4 @@ pydocstyle==6.3.0
 pyflakes==3.2.0
 pylint==3.3.8
 pytest==8.4.2
-pytest-mock==3.14.0
+pytest-mock==3.15.0

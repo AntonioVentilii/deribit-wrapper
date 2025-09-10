@@ -15,6 +15,7 @@ class Trading(AccountManagement):
     __GET_ORDER_STATE = '/private/get_order_state'
     __BUY = '/private/buy'
     __SELL = '/private/sell'
+    __CLOSE_POSITION = '/private/close_position'
     __GET_MARGINS = '/private/get_margins'
 
     def __init__(self, client_id: str = None, client_secret: str = None, env: str = 'prod',
@@ -187,4 +188,16 @@ class Trading(AccountManagement):
             else:
                 asset, amount, limit = order
             ret.append(self._order(asset, amount, limit=limit, label=label))
+        return ret
+
+    def close_position(self, asset: str, limit: float | int = None) -> dict:
+        uri = self.__CLOSE_POSITION
+        params = {
+            'instrument_name': asset,
+            'type': 'market',
+        }
+        if limit is not None:
+            params['type'] = 'limit'
+            params['price'] = limit
+        ret = self._request(uri, params)
         return ret

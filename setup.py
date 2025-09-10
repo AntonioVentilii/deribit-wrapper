@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='deribit_wrapper',
-    version='0.4.0',
+    version='0.4.1',
     packages=find_packages(),
     description='A Python wrapper for seamless integration with Deribit\'s trading API, offering easy access to '
                 'market data, account management, and trading operations.',

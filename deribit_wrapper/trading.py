@@ -13,6 +13,7 @@ from .utilities import DEFAULT_END, DEFAULT_START, OrdersType
 class Trading(AccountManagement):
     __GET_TRADE_BY_ORDER = '/private/get_user_trades_by_order'
     __GET_ORDER_STATE = '/private/get_order_state'
+    __GET_OPEN_ORDERS = '/private/get_open_orders'
     __BUY = '/private/buy'
     __SELL = '/private/sell'
     __CLOSE_POSITION = '/private/close_position'
@@ -61,6 +62,12 @@ class Trading(AccountManagement):
             results.append(self._request(uri, params))
         ret = pd.DataFrame(results)
         return ret
+
+    def get_open_orders(self) -> pd.DataFrame:
+        uri = self.__GET_OPEN_ORDERS
+        r = self._request(uri, {})
+        df = pd.DataFrame(r)
+        return df
 
     def add_order_data(self, trades: pd.DataFrame) -> pd.DataFrame:
         order_ids = list(set(trades['order_id']))

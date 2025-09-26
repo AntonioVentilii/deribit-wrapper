@@ -9,10 +9,31 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 
 class DeribitClient(Trading):
-    def __init__(self, env: str = 'prod', client_id: str = None, client_secret: str = None,
-                 progress_bar_desc: str = None, simulated: bool = True):
-        super().__init__(client_id=client_id, client_secret=client_secret, env=env,
-                         progress_bar_desc=progress_bar_desc, simulated=simulated)
+    def __init__(
+        self,
+        env: str = 'prod',
+        client_id: str = None,
+        client_secret: str = None,
+        progress_bar_desc: str = None,
+        simulated: bool = True,
+        option_currencies: str | list[str] = None,
+        preload_option_metadata: bool = True,
+    ):
+        """Entry point that wires defaults through to ``Trading``.
+
+        Args mirror :class:`Trading` so callers can enable the option metadata cache
+        directly from the high-level client.
+        """
+
+        super().__init__(
+            client_id=client_id,
+            client_secret=client_secret,
+            env=env,
+            progress_bar_desc=progress_bar_desc,
+            simulated=simulated,
+            option_currencies=option_currencies,
+            preload_option_metadata=preload_option_metadata,
+        )
 
 
 if __name__ == '__main__':

@@ -295,7 +295,7 @@ class Trading(AccountManagement):
         return ret
 
     def cancel_order_by_kind(
-        self, currency: str, kind: str = "any", _type: str = "any"
+        self, currency: str, kind: str = "any", _type: str = "all"
     ) -> dict:
         """
         Doc: https://docs.deribit.com/#private-cancel_all_by_kind_or_type

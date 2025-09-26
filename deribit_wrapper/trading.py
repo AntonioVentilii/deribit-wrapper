@@ -19,7 +19,7 @@ class Trading(AccountManagement):
     __CLOSE_POSITION = "/private/close_position"
     __GET_MARGINS = "/private/get_margins"
     __CANCEL_ORDER_BY_LABEL = "/private/cancel_by_label"
-    __CANCEL_ORDER_BY_KIND = "/private/cancel_all_by_kind"
+    __CANCEL_ORDER_BY_KIND = "/private/cancel_all_by_kind_or_type"
 
     def __init__(
         self,

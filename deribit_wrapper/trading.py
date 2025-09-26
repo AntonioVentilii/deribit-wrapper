@@ -28,7 +28,20 @@ class Trading(AccountManagement):
         env: str = "prod",
         progress_bar_desc: str = None,
         simulated: bool = True,
+        option_currencies: str | list[str] = None,
+        preload_option_metadata: bool = True,
     ):
+        """Create a trading client tailored for low-latency option execution.
+
+        Args:
+            client_id: Deribit API client ID.
+            client_secret: Deribit API client secret.
+            env: Target Deribit environment, e.g. ``"prod"`` or ``"test"``.
+            progress_bar_desc: Optional label used by progress bars in bulk calls.
+            simulated: When true, do not send real orders (mirrors previous behaviour).
+            option_currencies: Currency code or list of codes to prefetch option metadata for. eg, ["BTC"]
+            preload_option_metadata: Populate the min-trade-amount cache during construction.
+        """
         super().__init__(
             client_id=client_id,
             client_secret=client_secret,
@@ -36,6 +49,48 @@ class Trading(AccountManagement):
             progress_bar_desc=progress_bar_desc,
         )
         self.simulated = simulated
+        if option_currencies is None or isinstance(option_currencies, list):
+            self._option_currencies = option_currencies
+        else:
+            self._option_currencies = [option_currencies]
+        self._min_trade_amount_cache: dict[str, float] = {}
+        if preload_option_metadata:
+            self._prefetch_option_metadata()
+
+    def _prefetch_option_metadata(self) -> None:
+        """Preload min trade amounts for option instruments to avoid per-order fetches."""
+        currencies = self._option_currencies or self.currencies
+        instruments = self.get_instruments(currencies=currencies, kind="option")
+        if isinstance(instruments, pd.DataFrame) and not instruments.empty:
+            if {"instrument_name", "min_trade_amount"}.issubset(instruments.columns):
+                data = (
+                    instruments.set_index("instrument_name")["min_trade_amount"]
+                    .dropna()
+                    .astype(float)
+                    .to_dict()
+                )
+                self._min_trade_amount_cache.update(data)
+
+    def _get_min_trade_amount(self, instrument: str) -> float:
+        if instrument not in self._min_trade_amount_cache:
+            details = self.get_instrument(instrument)
+            min_amount = details.get("min_trade_amount")
+            if min_amount is None:
+                raise ValueError(
+                    f"No minimum trade amount available for instrument '{instrument}'."
+                )
+            self._min_trade_amount_cache[instrument] = float(min_amount)
+        return self._min_trade_amount_cache[instrument]
+
+    def check_min_trade_amount(self, orders: OrdersType) -> bool:
+        for order in orders:
+            instrument, amount = order[0], order[1]
+            min_amount = self._get_min_trade_amount(instrument)
+            if abs(amount) < min_amount:
+                raise ValueError(
+                    f"Order size {amount} is below Deribit minimum {min_amount} for {instrument}."
+                )
+        return True
 
     def instrument_margins(
         self, instrument: str, amount: float | int = 1, price: float = None

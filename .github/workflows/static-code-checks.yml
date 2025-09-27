@@ -92,8 +92,8 @@ jobs:
   #          make docs
 
   may-merge:
-    if: always()
     needs: [ 'format', 'lint', 'test', 'docs' ]
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

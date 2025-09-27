@@ -214,7 +214,7 @@ class Trading(AccountManagement):
     def cancel_orders(self,  currency: str | list[str] = None, label: str = None) -> dict:
         # Expand the function to cancel all orders by kind or type
         if label is None:
-            return {}
+            raise ValueError("The 'label' parameter is required to cancel orders.")
         uri = self.__CANCEL_BY_LABEL
         params = {
             'label': label,

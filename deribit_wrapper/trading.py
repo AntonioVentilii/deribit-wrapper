@@ -226,7 +226,8 @@ class Trading(AccountManagement):
             r[c] = self._request(uri, params)
         return r
 
-    def cancel_orders(self, currency: str | list[str] = None, kind: str = None, type: str = None, label: str = None) -> dict:
+    def cancel_orders(self, currency: str | list[str] = None, kind: str = None,
+                      order_type: str = None, label: str = None) -> dict:
         if label is not None:
             return self._cancel_by_label(label, currency)
         uri = self.__CANCEL_ALL_BY_KIND_OR_TYPE
@@ -235,8 +236,8 @@ class Trading(AccountManagement):
         }
         if kind is not None:
             params['kind'] = kind
-        if type is not None:
-            params['type'] = type
+        if order_type is not None:
+            params['type'] = order_type
         if currency is None:
             currency = self.currencies
         elif not isinstance(currency, list):

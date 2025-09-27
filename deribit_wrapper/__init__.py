@@ -1,1 +1,1 @@
-from .core import DeribitClient
+from .core import DeribitClient as DeribitClient

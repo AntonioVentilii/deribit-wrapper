@@ -1,3 +1,5 @@
+.PHONY: lint check format test docs all
+
 lint:
 	pylint deribit_wrapper
 	ruff check .

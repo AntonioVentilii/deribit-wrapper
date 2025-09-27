@@ -7,3 +7,5 @@ urllib3
 progressbar2
 python-dotenv
 tabulate
+black
+ruff

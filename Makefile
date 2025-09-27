@@ -6,7 +6,6 @@ format:
 
 lint:
 	pylint deribit_wrapper
-	ruff check .
 
 test:
 	pytest

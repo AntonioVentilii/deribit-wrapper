@@ -141,7 +141,7 @@ jobs:
 
   may-merge:
     if: always()
-    needs: [ 'lint', 'check', 'test', 'docs' ]
+    needs: [ 'format', 'lint', 'check', 'test', 'docs' ]
     runs-on: ubuntu-latest
     strategy:
       matrix:

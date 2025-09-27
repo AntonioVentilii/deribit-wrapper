@@ -8,9 +8,6 @@ lint:
 	pylint deribit_wrapper
 	ruff check .
 
-check:
-	pyflakes
-
 test:
 	pytest
 

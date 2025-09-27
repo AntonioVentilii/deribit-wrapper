@@ -226,7 +226,7 @@ class Trading(AccountManagement):
             r[c] = self._request(uri, params)
         return r
 
-    def cancel_orders(self, currency: str | list[str] = None, kind:str = None,type:str = None,label: str = None) -> dict:
+    def cancel_orders(self, currency: str | list[str] = None, kind: str = None, type: str = None, label: str = None) -> dict:
         if label is not None:
             return self._cancel_by_label(currency, label)
         uri = self.__CANCEL_ALL_BY_KIND_OR_TYPE

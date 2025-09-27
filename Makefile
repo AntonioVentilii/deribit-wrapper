@@ -5,7 +5,7 @@ lint:
 	ruff check .
 
 check:
-	pyflakes .
+	pyflakes
 
 format:
 	black .

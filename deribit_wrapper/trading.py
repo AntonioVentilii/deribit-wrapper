@@ -212,7 +212,7 @@ class Trading(AccountManagement):
         return ret
 
     def cancel_orders(self,  currency: str | list[str] = None, label: str = None) -> dict:
-        # TODO: expand the function to cancel all orders by kind or type
+        # Expand the function to cancel all orders by kind or type
         if label is None:
             return {}
         uri = self.__CANCEL_BY_LABEL

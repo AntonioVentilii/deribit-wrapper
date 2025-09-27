@@ -16,7 +16,7 @@ class Trading(AccountManagement):
     __GET_OPEN_ORDERS = '/private/get_open_orders'
     __BUY = '/private/buy'
     __SELL = '/private/sell'
-    __CLOSE_ALL_BY_KIND_OR_TYPE = '/private/cancel_all_by_kind_or_type'
+    __CANCEL_ALL_BY_KIND_OR_TYPE = '/private/cancel_all_by_kind_or_type'
     __CANCEL_BY_LABEL = '/private/cancel_by_label'
     __CLOSE_POSITION = '/private/close_position'
     __GET_MARGINS = '/private/get_margins'
@@ -211,10 +211,7 @@ class Trading(AccountManagement):
         ret = self._request(uri, params)
         return ret
 
-    def cancel_orders(self,  currency: str | list[str] = None, label: str = None) -> dict:
-        # Expand the function to cancel all orders by kind or type
-        if label is None:
-            raise ValueError("The 'label' parameter is required to cancel orders.")
+    def _cancel_by_label(self, label: str, currency: str | list[str] = None) -> dict:
         uri = self.__CANCEL_BY_LABEL
         params = {
             'label': label,
@@ -222,6 +219,27 @@ class Trading(AccountManagement):
         if currency is None:
             return self._request(uri, params)
         if not isinstance(currency, list):
+            currency = [currency]
+        r = {}
+        for c in currency:
+            params['currency'] = c
+            r[c] = self._request(uri, params)
+        return r
+
+    def cancel_orders(self, currency: str | list[str] = None, kind:str = None,type:str = None,label: str = None) -> dict:
+        if label is not None:
+            return self._cancel_by_label(currency, label)
+        uri = self.__CANCEL_ALL_BY_KIND_OR_TYPE
+        params = {
+            'currency': '',
+        }
+        if kind is not None:
+            params['kind'] = kind
+        if type is not None:
+            params['type'] = type
+        if currency is None:
+            currency = self.currencies
+        elif not isinstance(currency, list):
             currency = [currency]
         r = {}
         for c in currency:

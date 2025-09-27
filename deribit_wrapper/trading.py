@@ -16,6 +16,8 @@ class Trading(AccountManagement):
     __GET_OPEN_ORDERS = '/private/get_open_orders'
     __BUY = '/private/buy'
     __SELL = '/private/sell'
+    __CLOSE_ALL_BY_KIND_OR_TYPE = '/private/cancel_all_by_kind_or_type'
+    __CANCEL_BY_LABEL = '/private/cancel_by_label'
     __CLOSE_POSITION = '/private/close_position'
     __GET_MARGINS = '/private/get_margins'
 
@@ -208,3 +210,21 @@ class Trading(AccountManagement):
             params['price'] = limit
         ret = self._request(uri, params)
         return ret
+
+    def cancel_orders(self,  currency: str | list[str] = None, label: str = None) -> dict:
+        # Expand the function to cancel all orders by kind or type
+        if label is None:
+            return {}
+        uri = self.__CANCEL_BY_LABEL
+        params = {
+            'label': label,
+        }
+        if currency is None:
+            return self._request(uri, params)
+        if not isinstance(currency, list):
+            currency = [currency]
+        r = {}
+        for c in currency:
+            params['currency'] = c
+            r[c] = self._request(uri, params)
+        return r

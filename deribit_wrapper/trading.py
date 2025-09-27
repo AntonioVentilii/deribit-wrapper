@@ -228,7 +228,7 @@ class Trading(AccountManagement):
 
     def cancel_orders(self, currency: str | list[str] = None, kind: str = None, type: str = None, label: str = None) -> dict:
         if label is not None:
-            return self._cancel_by_label(currency, label)
+            return self._cancel_by_label(label, currency)
         uri = self.__CANCEL_ALL_BY_KIND_OR_TYPE
         params = {
             'currency': '',

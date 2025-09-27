@@ -19,21 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+        python-version: [ 3.11, 3.12, 3.13 ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: ./.github/actions/prepare
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
       - name: Format
         run: |
@@ -43,21 +37,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+        python-version: [ 3.11, 3.12, 3.13 ]
 
     steps:
       - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: ./.github/actions/prepare
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
       - name: Lint
         run: |
@@ -67,21 +55,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+        python-version: [ 3.11, 3.12, 3.13 ]
 
     steps:
       - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: ./.github/actions/prepare
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
       - name: Test
         env:
@@ -94,21 +76,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
+        python-version: [ 3.11, 3.12, 3.13 ]
 
     steps:
       - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: ./.github/actions/prepare
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
   #      TODO: improve documentation
   #      - name: Docs style
@@ -116,18 +92,11 @@ jobs:
   #          make docs
 
   may-merge:
-    if: always()
     needs: [ 'format', 'lint', 'test', 'docs' ]
+    if: ${{ always() }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.9, '3.10', 3.11, 3.12, 3.13 ]
     steps:
-      - name: Cleared for merging
-        run: |
-          if [ "${{ needs.lint.result }}" == "success" ] && [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.docs.result }}" == "success" ]; then
-            echo "This PR is cleared for merging"
-          else
-            echo "This PR is not cleared for merging"
-            exit 1
-          fi
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/needs_success
+        with:
+          needs: '${{ toJson(needs) }}'

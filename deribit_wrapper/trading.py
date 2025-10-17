@@ -13,6 +13,7 @@ from .utilities import DEFAULT_END, DEFAULT_START, OrdersType
 class Trading(AccountManagement):
     __GET_TRADE_BY_ORDER = "/private/get_user_trades_by_order"
     __GET_ORDER_STATE = "/private/get_order_state"
+    __GET_ORDER_STATE_BY_LABEL = "/private/get_order_state_by_label"
     __GET_OPEN_ORDERS = "/private/get_open_orders"
     __BUY = "/private/buy"
     __SELL = "/private/sell"
@@ -133,6 +134,22 @@ class Trading(AccountManagement):
             results += self._request(uri, params)
         ret = pd.DataFrame(results)
         return ret
+
+    def get_order_status_by_label(self, order_label: str, currency: str = "BTC") -> dict:
+        """Return the current Deribit order state for a label."""
+        if not order_label:
+            raise ValueError("Order label must be provided.")
+        params = {"currency": currency, "label": order_label}
+        response = self._request(self.__GET_ORDER_STATE_BY_LABEL, params)
+
+        if isinstance(response, list):
+            if not response:
+                return None
+            order_info = response[0]
+        else:
+            order_info = response or {}
+
+        return order_info
 
     def get_orders(self, order_ids: list[str | int]) -> pd.DataFrame:
         uri = self.__GET_ORDER_STATE

@@ -4,7 +4,7 @@ import json
 import time
 import uuid
 import warnings
-from typing import overload
+from typing import Any, overload
 
 from requests import Response, Session
 from requests.adapters import HTTPAdapter
@@ -27,7 +27,7 @@ class Authentication(DeribitBase):
         env: str = "prod",
         client_id: str = None,
         client_secret: str = None,
-        private_key: str | bytes | None = None,
+        private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
     ):
         super().__init__(env=env)
@@ -51,7 +51,7 @@ class Authentication(DeribitBase):
         return self._client_secret
 
     @property
-    def private_key(self) -> str | bytes | None:
+    def private_key(self) -> str | bytes | Any | None:
         return self._private_key
 
     @property
@@ -62,7 +62,7 @@ class Authentication(DeribitBase):
         self,
         client_id: str,
         client_secret: str = None,
-        private_key: str | bytes | None = None,
+        private_key: str | bytes | Any | None = None,
         auth_method: str = None,
     ):
         if auth_method is not None:
@@ -190,6 +190,7 @@ class Authentication(DeribitBase):
                 print(
                     f"Invalid token. Trying to get a new one. Attempt {i + 1} of {max_attempts}..."
                 )
+                self.get_new_token()
                 return self._request(uri, params, give_results=give_results)
         return {}
 

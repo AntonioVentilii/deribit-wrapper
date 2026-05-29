@@ -2,6 +2,7 @@ from __future__ import absolute_import, annotations
 
 import json
 import logging
+from typing import Any
 
 from .trading import Trading
 
@@ -14,7 +15,7 @@ class DeribitClient(Trading):
         env: str = "prod",
         client_id: str = None,
         client_secret: str = None,
-        private_key: str | bytes | None = None,
+        private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
         progress_bar_desc: str = None,
         simulated: bool = True,

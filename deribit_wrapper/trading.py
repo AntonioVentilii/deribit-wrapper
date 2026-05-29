@@ -3,6 +3,8 @@ from __future__ import absolute_import, annotations
 import time
 from datetime import datetime
 
+from typing import Any
+
 import pandas as pd
 from progressbar import progressbar
 
@@ -26,7 +28,7 @@ class Trading(AccountManagement):
         client_id: str = None,
         client_secret: str = None,
         env: str = "prod",
-        private_key: str | bytes | None = None,
+        private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
         progress_bar_desc: str = None,
         simulated: bool = True,

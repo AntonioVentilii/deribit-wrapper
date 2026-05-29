@@ -7,3 +7,4 @@ urllib3
 progressbar2
 python-dotenv
 tabulate
+cryptography>=42.0.0

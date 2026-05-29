@@ -14,14 +14,14 @@ OrdersType = List[Union[MarketOrderType, LimitOrderType]]
 DatetimeType = Union[datetime, str, float]
 StrikeType = Union[str, float]
 
-ScopeType = Literal['read', 'read_write', 'none']
+ScopeType = Literal["read", "read_write", "none"]
 SCOPES = list(get_args(ScopeType))
 
-MarginModelType = Literal['cross_pm', 'cross_sm', 'segregated_pm', 'segregated_sm']
+MarginModelType = Literal["cross_pm", "cross_sm", "segregated_pm", "segregated_sm"]
 MARGIN_MODELS = list(get_args(MarginModelType))
 
-DEFAULT_START = '2000-01-01'
-DEFAULT_END = 'now'
+DEFAULT_START = "2000-01-01"
+DEFAULT_END = "now"
 
 
 def from_ts_to_dt(timestamp: int | float, milliseconds: bool = True) -> datetime:
@@ -44,4 +44,4 @@ def from_dt_to_ts(date: str | datetime, milliseconds: bool = True) -> int:
 def seconds_to_hms(seconds: int) -> str:
     h, r = divmod(seconds, 3600)
     m, s = divmod(r, 60)
-    return f'{h}h {m:02d}m {s:02d}s'
+    return f"{h}h {m:02d}m {s:02d}s"

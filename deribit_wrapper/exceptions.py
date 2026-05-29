@@ -6,17 +6,8 @@ class InvalidMarginModelError(Exception):
     pass
 
 
-
-
-
-
 class WaitRequiredError(Exception):
     pass
-
-
-
-
-
 
 
 class PriceUnavailableError(Exception):

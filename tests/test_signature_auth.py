@@ -203,3 +203,37 @@ def test_missing_credentials_warnings():
     # Warning when Private Key is missing in asymmetric auth_method
     with pytest.warns(DeribitClientWarning):
         Authentication(env="test", auth_method="asymmetric", client_id="dummy_id")
+
+
+def test_missing_credentials_exceptions():
+    """Test that ValueError is raised on missing credentials under new checks."""
+    # Symmetric signature generation error when client_secret is missing
+    auth_sym = Authentication(env="test", client_id="dummy_id", auth_method="signature")
+    with pytest.raises(
+        ValueError, match="Cannot generate signature without Client Secret"
+    ):
+        auth_sym._generate_signature(1715678900000, "nonce", "")
+
+    # Asymmetric signature generation error when private_key is missing
+    auth_asym = Authentication(
+        env="test", client_id="dummy_id", auth_method="asymmetric"
+    )
+    with pytest.raises(
+        ValueError, match="Cannot generate asymmetric signature without Private Key"
+    ):
+        auth_asym._generate_signature(1715678900000, "nonce", "")
+
+    # Token generation error when client_id/secret is missing in credentials
+    auth_cred = Authentication(env="test", auth_method="credentials")
+    with pytest.raises(
+        ValueError,
+        match="Cannot generate new token without Client ID and Client Secret",
+    ):
+        auth_cred.get_new_token()
+
+    # Token generation error when client_id/private_key is missing in asymmetric
+    auth_asym_token = Authentication(env="test", auth_method="asymmetric")
+    with pytest.raises(
+        ValueError, match="Cannot generate new token without Client ID and Private Key"
+    ):
+        auth_asym_token.get_new_token()

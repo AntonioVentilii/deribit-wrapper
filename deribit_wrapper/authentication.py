@@ -285,7 +285,7 @@ class Authentication(DeribitBase):
         return final_scope
 
     def _generate_signature(self, timestamp: int, nonce: str, data: str = "") -> str:
-        # pylint: disable=too-many-locals,import-outside-toplevel,broad-exception-caught,no-else-return
+        # pylint: disable=too-many-locals,too-many-branches,import-outside-toplevel,broad-exception-caught,no-else-return
         """
         Generates the cryptographic signature for client_signature authentication.
         Message to sign format: timestamp + "\n" + nonce + "\n" + data
@@ -297,16 +297,16 @@ class Authentication(DeribitBase):
             import hmac
             import hashlib
 
-            assert self.client_secret, "Cannot generate signature without Client Secret"
+            if not self.client_secret:
+                raise ValueError("Cannot generate signature without Client Secret")
             sig = hmac.new(
                 self.client_secret.encode("utf-8"), message_bytes, hashlib.sha256
             ).hexdigest()
             return sig
 
         elif self._auth_method == "asymmetric":
-            assert (
-                self._private_key
-            ), "Cannot generate asymmetric signature without Private Key"
+            if not self._private_key:
+                raise ValueError("Cannot generate asymmetric signature without Private Key")
             from cryptography.hazmat.primitives.asymmetric import (
                 ed25519,
                 rsa,
@@ -359,13 +359,11 @@ class Authentication(DeribitBase):
         self, use_refresh_token_if_available: bool = True, expires_in: int = 0
     ) -> str:
         if self._auth_method == "asymmetric":
-            assert (
-                self.client_id and self._private_key
-            ), "Cannot generate new token without Client ID and Private Key"
+            if not self.client_id or not self._private_key:
+                raise ValueError("Cannot generate new token without Client ID and Private Key")
         else:
-            assert (
-                self.client_id and self.client_secret
-            ), "Cannot generate new token without Client ID and Client Secret"
+            if not self.client_id or not self.client_secret:
+                raise ValueError("Cannot generate new token without Client ID and Client Secret")
         uri = self.__AUTH
         scope = self.create_new_scope(expires_in=expires_in)
         if use_refresh_token_if_available and self._refresh_token:

@@ -156,6 +156,10 @@ class Authentication(DeribitBase):
             return self._handle_temporarily_unavailable(
                 uri, params, give_results=give_results
             )
+        if error_code == 10041:
+            return self._handle_settlement_in_progress(
+                uri, params, give_results=give_results
+            )
         if error_code == -32602:
             self._handle_invalid_params(uri, error_data)
         else:
@@ -202,6 +206,22 @@ class Authentication(DeribitBase):
             if ret.get("code") != 13028:
                 return ret
         raise ServiceUnavailable("Service temporarily unavailable.")
+
+    def _handle_settlement_in_progress(
+        self, uri: str, params: ParamsType, give_results: bool
+    ) -> dict:
+        max_attempts = 60
+        for i in range(max_attempts):
+            print(
+                f"Settlement in progress. Waiting 1 second [{i + 1}/{max_attempts}]..."
+            )
+            time.sleep(1)
+            ret = self._request(uri, params, give_results=give_results)
+            if isinstance(ret, dict) and ret.get("code") != 10041:
+                return ret
+            if not isinstance(ret, dict):
+                return ret
+        return {}
 
     def _handle_invalid_params(self, uri: str, error_data: dict):
         param = error_data.get("param")

@@ -158,19 +158,6 @@ class Trading(AccountManagement):
                     uri, params, exclude_codes=[10009]
                 )
 
-        # 10041: settlement in progress
-        elif code == 10041:
-            max_attempts = 60
-            for _ in range(max_attempts):
-                print("Settlement in progress. Waiting 1 second...")
-                time.sleep(1)
-                ret = self._order_with_error_handling(
-                    uri, params, exclude_codes=[10041]
-                )
-                code = ret.get("code")
-                if code != 10041:
-                    break
-
         else:
             print(f"Error code {code} not handled yet.")
 

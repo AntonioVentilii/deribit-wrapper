@@ -163,10 +163,7 @@ class Authentication(DeribitBase):
         if error_code == -32602:
             self._handle_invalid_params(uri, error_data)
         else:
-            print(
-                f"Error code {error_code} for request {uri} with param keys {list(params.keys())}."
-            )
-            print(error_data)
+            print(f"Error code {error_code} for request {uri}.")
         return {}
 
     def _handle_too_many_requests(
@@ -306,7 +303,9 @@ class Authentication(DeribitBase):
 
         elif self._auth_method == "asymmetric":
             if not self._private_key:
-                raise ValueError("Cannot generate asymmetric signature without Private Key")
+                raise ValueError(
+                    "Cannot generate asymmetric signature without Private Key"
+                )
             from cryptography.hazmat.primitives.asymmetric import (
                 ed25519,
                 rsa,
@@ -360,10 +359,14 @@ class Authentication(DeribitBase):
     ) -> str:
         if self._auth_method == "asymmetric":
             if not self.client_id or not self._private_key:
-                raise ValueError("Cannot generate new token without Client ID and Private Key")
+                raise ValueError(
+                    "Cannot generate new token without Client ID and Private Key"
+                )
         else:
             if not self.client_id or not self.client_secret:
-                raise ValueError("Cannot generate new token without Client ID and Client Secret")
+                raise ValueError(
+                    "Cannot generate new token without Client ID and Client Secret"
+                )
         uri = self.__AUTH
         scope = self.create_new_scope(expires_in=expires_in)
         if use_refresh_token_if_available and self._refresh_token:

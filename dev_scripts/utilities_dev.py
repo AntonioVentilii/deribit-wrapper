@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def flatten_dict(d: dict, parent_key: str = '', sep: str = '_') -> dict:
+def flatten_dict(d: dict, parent_key: str = "", sep: str = "_") -> dict:
     items = []
     for k, v in d.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -13,7 +13,7 @@ def flatten_dict(d: dict, parent_key: str = '', sep: str = '_') -> dict:
 
 
 def create_multilevel_df(data: list[dict]) -> pd.DataFrame:
-    sep = '___'
+    sep = "___"
     flattened_data = [flatten_dict(item, sep=sep) for item in data]
     df = pd.DataFrame(flattened_data)
     multiindex_columns = [tuple(col.split(sep)) for col in df.columns]

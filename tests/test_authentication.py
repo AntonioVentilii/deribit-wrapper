@@ -1,5 +1,5 @@
 import os
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from unittest.mock import patch
 
 import pytest
@@ -20,15 +20,17 @@ token_mock_response = {
 @pytest.fixture
 def auth_instance():
     """Fixture to create an Authentication instance with credentials loaded from environment variables."""
-    client_id = os.environ.get("TEST_CLIENT_ID")
-    client_secret = os.environ.get("TEST_CLIENT_SECRET")
+    client_id = os.environ.get("TEST_CLIENT_ID") or "dummy_id"
+    client_secret = os.environ.get("TEST_CLIENT_SECRET") or "dummy_secret"
     return Authentication(env="test", client_id=client_id, client_secret=client_secret)
 
 
 def test_credentials_set_correctly(auth_instance):
     """Test that client ID and client secret are set correctly from environment variables."""
-    assert auth_instance.client_id == os.environ.get("TEST_CLIENT_ID")
-    assert auth_instance.client_secret == os.environ.get("TEST_CLIENT_SECRET")
+    expected_id = os.environ.get("TEST_CLIENT_ID") or "dummy_id"
+    expected_secret = os.environ.get("TEST_CLIENT_SECRET") or "dummy_secret"
+    assert auth_instance.client_id == expected_id
+    assert auth_instance.client_secret == expected_secret
 
 
 def test_warning_raised_when_credentials_not_provided():
@@ -92,6 +94,10 @@ def test_get_new_token_retrieves_new_token():
         mock_create_new_scope.assert_called()
 
 
+@skipIf(
+    not os.environ.get("TEST_CLIENT_ID") or not os.environ.get("TEST_CLIENT_SECRET"),
+    "Integration tests require TEST_CLIENT_ID and TEST_CLIENT_SECRET env variables",
+)
 class TestDeribitIntegration(TestCase):
     def setUp(self):
         env = "test"

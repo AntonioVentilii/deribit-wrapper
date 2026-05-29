@@ -6,7 +6,7 @@ from deribit_wrapper.market_data import MarketData
 
 USE_TEST_ENV = True
 
-md_test = MarketData(env='test')
+md_test = MarketData(env="test")
 md_prod = MarketData()
 
 if USE_TEST_ENV:
@@ -14,24 +14,24 @@ if USE_TEST_ENV:
 else:
     md = md_prod
 
-CURRENCY = 'MATIC'
+CURRENCY = "MATIC"
 
 
 def debug_get_currencies():
     currencies = md.currencies
-    print(f'Currencies: {currencies}')
+    print(f"Currencies: {currencies}")
 
 
 def debug_get_instruments():
     currency = CURRENCY
     instruments = md.get_instruments(currency, as_list=True)
-    print(f'Instruments for {currency}: {instruments}')
+    print(f"Instruments for {currency}: {instruments}")
 
 
 def debug_get_first_future():
     currency = CURRENCY
     future = md.get_first_future(currency)
-    print(f'First future for {currency}: {future}')
+    print(f"First future for {currency}: {future}")
 
 
 def run():

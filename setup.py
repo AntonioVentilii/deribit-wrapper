@@ -17,6 +17,7 @@ setup(
         'pandas',
         'urllib3',
         'progressbar2',
+        'cryptography>=42.0.0',
     ],
     classifiers=[
         'Programming Language :: Python :: 3',

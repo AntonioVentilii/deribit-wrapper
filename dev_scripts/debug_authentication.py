@@ -15,11 +15,11 @@ authentication = Authentication(
 
 def debug_get_new_token():
     token_1 = authentication.get_new_token()
-    print(f"First access token: {token_1}")
+    print("Successfully retrieved first access token.")
     token_2 = authentication.get_new_token()
-    print(f"Access token using refresh token: {token_2}")
+    print("Successfully retrieved access token using refresh token.")
     token_3 = authentication.get_new_token(use_refresh_token_if_available=False)
-    print(f"Access token using client id and secret: {token_3}")
+    print("Successfully retrieved access token using client id and secret.")
 
 
 def debug_token_that_expires():
@@ -27,21 +27,21 @@ def debug_token_that_expires():
     token = authentication.get_new_token(
         use_refresh_token_if_available=False, expires_in=expires_in
     )
-    print(f"Access token that expires in {expires_in} seconds: {token}")
+    print(f"Successfully retrieved access token that expires in {expires_in} seconds.")
     time.sleep(expires_in + 1)
     check = authentication.is_token_expired()
     assert check, "Token should be expired."
-    print(f"Token expired correctly after {expires_in} seconds.")
+    print("Token expired correctly.")
 
 
 def debug_get_time():
     ret = authentication.get_time()
-    print(f'Time: {ret} | {time.strftime("%Y-%m-%d %H:%M:%S")}')
+    print("Successfully retrieved server time.")
 
 
 def debug_get_status():
     ret = authentication.get_status()
-    print(f"Status: {ret}")
+    print("Successfully retrieved system status.")
     locked_currencies = authentication.get_locked_currencies()
     print(f"Locked currencies: {locked_currencies}")
     locked_indices = authentication.get_locked_indices()
@@ -50,7 +50,7 @@ def debug_get_status():
 
 def debug_get_test():
     ret = authentication.test()
-    print(f"Test: {ret}")
+    print("Successfully executed test endpoint.")
     api_version = authentication.get_api_version()
     print(f"API version: {api_version}")
 

@@ -38,11 +38,10 @@ def debug_get_account_summary():
 
 def debug_api_keys():
     api_keys = account_management.list_api_keys()
-    print(f"API keys:\n{api_keys.to_string()}")
+    print("API keys retrieved successfully.")
     for key_id in api_keys["id"]:
         key = account_management.get_api_key(key_id)
-        name = key["name"]
-        print(f"API key {key_id} [{name}]: name={name}, id={key_id}")
+        print("API key retrieved successfully.")
     scope = account_management.create_new_scope(
         account="read", trade="none", wallet="read"
     )
@@ -51,9 +50,9 @@ def debug_api_keys():
     new_key_scope = new_key["max_scope"]
     compare_scopes(scope, new_key_scope, "API Key")
     new_key_name = new_key["name"]
-    assert new_key_name == name, f"New key name: {new_key_name} != {name}"
-    print(f"New key: name={new_key_name}, id={new_key_id}")
+    assert new_key_name == name, "New key name mismatch"
     new_key_id = new_key["id"]
+    print("New key created successfully.")
     new_scope = account_management.create_new_scope(
         account="read", trade="read", wallet="read"
     )
@@ -63,50 +62,44 @@ def debug_api_keys():
     edited_key_scope = edited_key["max_scope"]
     compare_scopes(new_scope, edited_key_scope, "Edited API Key")
     edited_key_name = edited_key["name"]
-    assert (
-        edited_key_name == new_name
-    ), f"Edited key name: {edited_key_name} != {new_name}"
-    print(f"Edited key: name={edited_key_name}, id={new_key_id}")
+    assert edited_key_name == new_name, "Edited key name mismatch"
+    print("Edited key saved successfully.")
     account_management.disable_api_key(new_key_id)
     disabled_key = account_management.get_api_key(new_key_id)
     disabled_key_state = disabled_key["enabled"]
-    assert not disabled_key_state, f"Disabled key state: {disabled_key_state} != False"
-    print(f"Disabled API key {new_key_id} successfully.")
+    assert not disabled_key_state, "Disabled key state mismatch"
+    print("Disabled API key successfully.")
     account_management.enable_api_key(new_key_id)
     enabled_key = account_management.get_api_key(new_key_id)
     enabled_key_state = enabled_key["enabled"]
-    assert enabled_key_state, f"Enabled key state: {enabled_key_state} != True"
-    print(f"Enabled API key {new_key_id} successfully.")
+    assert enabled_key_state, "Enabled key state mismatch"
+    print("Enabled API key successfully.")
     account_management.remove_api_key(new_key_id)
     new_api_keys = account_management.list_api_keys()
     assert (
         new_key_id not in new_api_keys["id"]
-    ), f'New key id: {new_key_id} still in {new_api_keys["id"]}'
-    print(f"API key {new_key_id} removed.")
+    ), "New key id still in active API keys list"
+    print("API key removed successfully.")
 
 
 def debug_subaccounts():
     subaccounts = account_management.get_subaccounts()
-    print(f"Subaccounts:\n{subaccounts.to_string()}")
+    print("Subaccounts retrieved successfully.")
     new_subaccount = account_management.create_subaccount()
-    print(f"New subaccount:\n{json.dumps(new_subaccount, indent=2)}")
+    print("New subaccount created successfully.")
     new_subaccount_id = new_subaccount["id"]
     new_name = f"test_subaccount_{int(time.time())}"
     account_management.change_subaccount_name(new_subaccount_id, new_name)
     edited_subaccount = account_management.get_subaccount(new_subaccount_id)
     edited_subaccount_name = edited_subaccount["username"]
-    assert (
-        edited_subaccount_name == new_name
-    ), f"Edited subaccount name: {edited_subaccount_name} != {new_name}"
-    print(f"Edited subaccount {new_subaccount_id} name to {new_name} successfully.")
+    assert edited_subaccount_name == new_name, "Edited subaccount name mismatch"
+    print("Edited subaccount name successfully.")
     account_management.remove_subaccount(new_subaccount_id, wait_if_over_limit=True)
     try:
         account_management.get_subaccount(new_subaccount_id)
     except Exception as e:
-        assert f"Subaccount {new_subaccount_id} not found" in str(
-            e
-        ), f"Error message: {e}"
-    print(f"Subaccount {new_subaccount_id} removed successfully.")
+        assert "Subaccount" in str(e), "Expected subaccount not found error"
+    print("Subaccount removed successfully.")
 
 
 def debug_margin_model():

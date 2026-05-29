@@ -42,10 +42,7 @@ def debug_api_keys():
     for key_id in api_keys["id"]:
         key = account_management.get_api_key(key_id)
         name = key["name"]
-        print(
-            f"API key {key_id} [{name}]: name={name}, id={key_id}, "
-            f"enabled={key.get('enabled')}, max_scope={key.get('max_scope')}"
-        )
+        print(f"API key {key_id} [{name}]: name={name}, id={key_id}")
     scope = account_management.create_new_scope(
         account="read", trade="none", wallet="read"
     )
@@ -55,10 +52,7 @@ def debug_api_keys():
     compare_scopes(scope, new_key_scope, "API Key")
     new_key_name = new_key["name"]
     assert new_key_name == name, f"New key name: {new_key_name} != {name}"
-    print(
-        f"New key: name={new_key.get('name')}, id={new_key.get('id')}, "
-        f"enabled={new_key.get('enabled')}, max_scope={new_key.get('max_scope')}"
-    )
+    print(f"New key: name={new_key_name}, id={new_key_id}")
     new_key_id = new_key["id"]
     new_scope = account_management.create_new_scope(
         account="read", trade="read", wallet="read"
@@ -72,10 +66,7 @@ def debug_api_keys():
     assert (
         edited_key_name == new_name
     ), f"Edited key name: {edited_key_name} != {new_name}"
-    print(
-        f"Edited key: name={edited_key.get('name')}, id={edited_key.get('id')}, "
-        f"enabled={edited_key.get('enabled')}, max_scope={edited_key.get('max_scope')}"
-    )
+    print(f"Edited key: name={edited_key_name}, id={new_key_id}")
     account_management.disable_api_key(new_key_id)
     disabled_key = account_management.get_api_key(new_key_id)
     disabled_key_state = disabled_key["enabled"]

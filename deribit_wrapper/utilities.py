@@ -37,7 +37,7 @@ def from_dt_to_ts(date: str | datetime, milliseconds: bool = True) -> int:
     # naive datetimes are interpreted as UTC, matching from_ts_to_dt and the
     # UTC epoch timestamps used by the Deribit API; the integer nanosecond
     # value avoids float rounding and keeps millisecond precision
-    ns = pd.to_datetime(date, utc=True).value
+    ns = int(pd.to_datetime(date, utc=True).value)
     if milliseconds:
         return ns // 10**6
     return ns // 10**9

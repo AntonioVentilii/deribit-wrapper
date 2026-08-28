@@ -76,9 +76,9 @@ def debug_api_keys():
     print("Enabled API key successfully.")
     account_management.remove_api_key(new_key_id)
     new_api_keys = account_management.list_api_keys()
-    assert (
-        new_key_id not in new_api_keys["id"]
-    ), "New key id still in active API keys list"
+    assert new_key_id not in new_api_keys["id"], (
+        "New key id still in active API keys list"
+    )
     print("API key removed successfully.")
 
 
@@ -109,9 +109,9 @@ def debug_margin_model():
     new_margin_model: MarginModelType = "segregated_sm"
     account_management.change_margin_model(new_margin_model)
     edited_margin_models = account_management.get_margin_model()
-    assert (
-        edited_margin_models["margin_model"] == new_margin_model
-    ).all(), f"Margin model not changed to {new_margin_model}."
+    assert (edited_margin_models["margin_model"] == new_margin_model).all(), (
+        f"Margin model not changed to {new_margin_model}."
+    )
     print(
         f"Margin model changed to {new_margin_model} successfully. Reverting to {current_margin_model}."
     )
@@ -119,7 +119,7 @@ def debug_margin_model():
     change_is_possible = account_management.check_if_margin_model_change_is_possible(
         "cross_pm"
     )
-    print(f'Change to cross_pm is {"" if change_is_possible else "not "}possible.')
+    print(f"Change to cross_pm is {'' if change_is_possible else 'not '}possible.")
 
 
 def run():

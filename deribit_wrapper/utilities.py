@@ -58,10 +58,14 @@ def flatten_dict(d: dict, parent_key: str = "", sep: str = "_") -> dict:
     return dict(items)
 
 
-def create_multilevel_df(data: list[dict]) -> pd.DataFrame:
+def create_multilevel_df(data: dict | list[dict]) -> pd.DataFrame:
     sep = "___"
+    if isinstance(data, dict):
+        data = [data]
     flattened_data = [flatten_dict(item, sep=sep) for item in data]
     df = pd.DataFrame(flattened_data)
+    if df.columns.empty:
+        return df
     multiindex_columns = [tuple(col.split(sep)) for col in df.columns]
     df.columns = pd.MultiIndex.from_tuples(multiindex_columns)
     return df

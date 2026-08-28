@@ -6,7 +6,11 @@ import pytest
 from dotenv import load_dotenv
 
 from deribit_wrapper.authentication import Authentication
-from deribit_wrapper.exceptions import DeribitClientWarning, RequestError
+from deribit_wrapper.exceptions import (
+    DeribitClientWarning,
+    RequestError,
+    ServiceUnavailable,
+)
 
 load_dotenv()
 
@@ -212,3 +216,35 @@ def test_close_releases_and_is_idempotent(auth_instance):
     assert auth_instance._http_session is None
     auth_instance.close()  # idempotent
     assert auth_instance._session is not session  # a new session is created lazily
+
+
+def test_temporarily_unavailable_is_bounded(auth_instance, mocker):
+    """Test that repeated 13028 responses give up instead of blocking forever."""
+    mocker.patch("time.sleep")
+    auth_instance.unavailable_max_attempts = 3
+    auth_instance.unavailable_wait_seconds = 0
+    with patch.object(
+        auth_instance, "_request", return_value={"code": 13028}
+    ) as mock_request:
+        with pytest.raises(ServiceUnavailable, match="3 attempts"):
+            auth_instance._handle_temporarily_unavailable("/private/x", {}, True)
+    assert mock_request.call_count == 3
+
+
+def test_temporarily_unavailable_returns_on_recovery(auth_instance, mocker):
+    """Test that the first non-13028 response is returned."""
+    mocker.patch("time.sleep")
+    auth_instance.unavailable_wait_seconds = 0
+    with patch.object(
+        auth_instance, "_request", side_effect=[{"code": 13028}, {"ok": True}]
+    ) as mock_request:
+        ret = auth_instance._handle_temporarily_unavailable("/private/x", {}, True)
+    assert ret == {"ok": True}
+    assert mock_request.call_count == 2
+
+
+def test_unavailable_defaults_are_bounded():
+    """Test that the default retry budget cannot block for an hour."""
+    auth = Authentication(env="test", client_id="id", client_secret="secret")
+    worst_case = auth.unavailable_max_attempts * auth.unavailable_wait_seconds
+    assert worst_case <= 600

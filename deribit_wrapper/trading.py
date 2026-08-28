@@ -284,13 +284,17 @@ class Trading(AccountManagement):
     def close_position(self, asset: str, limit: float | int = None) -> dict:
         """Close a position at market, or at a limit price if given; simulated when simulated=True."""
         if self.simulated:
-            return {
+            ret = {
                 "info": SIMULATION_INFO,
                 "timestamp": int(time.time() * 1e3),
                 "instrument_name": asset,
                 "type": "market" if limit is None else "limit",
-                "price": limit if limit is not None else self.last_price(asset),
             }
+            # a market close has no price to report, and looking one up would
+            # issue a real ticker request in simulation mode
+            if limit is not None:
+                ret["price"] = limit
+            return ret
         uri = self.__CLOSE_POSITION
         params = {
             "instrument_name": asset,
@@ -304,7 +308,11 @@ class Trading(AccountManagement):
 
     def _cancel_by_label(self, label: str, currency: str | list[str] = None) -> dict:
         if self.simulated:
-            return {"info": SIMULATION_INFO, "label": label, "currency": currency}
+            simulated = {"info": SIMULATION_INFO, "label": label}
+            if currency is None:
+                return simulated
+            currencies = [currency] if not isinstance(currency, list) else currency
+            return {c: {**simulated, "currency": c} for c in currencies}
         uri = self.__CANCEL_BY_LABEL
         params = {
             "label": label,
@@ -330,12 +338,14 @@ class Trading(AccountManagement):
         if label is not None:
             return self._cancel_by_label(label, currency)
         if self.simulated:
-            return {
-                "info": SIMULATION_INFO,
-                "currency": currency,
-                "kind": kind,
-                "type": order_type,
-            }
+            simulated = {"info": SIMULATION_INFO, "kind": kind, "type": order_type}
+            # resolving currency=None reads the public currency list, exactly as
+            # live mode does, so the simulated result keeps the same keys; no
+            # private endpoint is touched
+            currencies = self.currencies if currency is None else currency
+            if not isinstance(currencies, list):
+                currencies = [currencies]
+            return {c: {**simulated, "currency": c} for c in currencies}
         uri = self.__CANCEL_ALL_BY_KIND_OR_TYPE
         params = {
             "currency": "",

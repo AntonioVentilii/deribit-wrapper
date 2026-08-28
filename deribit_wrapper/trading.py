@@ -15,7 +15,7 @@ from .utilities import DEFAULT_END, DEFAULT_START, OrdersType
 
 
 class Trading(AccountManagement):
-    """Place, query, and cancel orders; simulated=True keeps orders local."""
+    """Place, query, and cancel orders; simulated=True builds order results locally instead of submitting them."""
 
     __GET_TRADE_BY_ORDER = "/private/get_user_trades_by_order"
     __GET_ORDER_STATE = "/private/get_order_state"
@@ -62,7 +62,7 @@ class Trading(AccountManagement):
     def instrument_margin(
         self, instrument: str, amount: float | int = 1, price: float = None
     ) -> float:
-        """Return the buy margin for positive amounts, sell margin for negative."""
+        """Return the buy margin for positive amounts and the sell margin otherwise."""
         side = "buy" if amount > 0 else "sell"
         return self.instrument_margins(instrument, amount=abs(amount), price=price)[
             side
@@ -244,7 +244,7 @@ class Trading(AccountManagement):
         label: str = None,
         reduce_only: bool = False,
     ) -> dict:
-        """Place an order after a minimum-size check, returning errors as data."""
+        """Place an order after a minimum-size check; placement errors are returned as {'error': ...}."""
         self.check_min_trade_amount([(asset, amount)])
         try:
             ret = self._order(

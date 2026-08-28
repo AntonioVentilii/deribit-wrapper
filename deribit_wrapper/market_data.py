@@ -272,15 +272,15 @@ class MarketData(Authentication):
         ret = self.get_closest_strike_by_future(future)
         return ret
 
-    def min_trade_amount(self, instruments: str | list[str] = None) -> pd.DataFrame:
-        """Return minimum trade amounts indexed by instrument name."""
+    def min_trade_amount(self, instruments: str | list[str] = None) -> pd.Series:
+        """Return minimum trade amounts as a Series indexed by instrument name."""
         df = self.get_instruments()
         df.set_index("instrument_name", inplace=True)
         if instruments is not None:
             df = df.loc[instruments, :]
         return df["min_trade_amount"]
 
-    def check_min_trade_amount(self, orders: OrdersType) -> pd.DataFrame:
+    def check_min_trade_amount(self, orders: OrdersType) -> bool:
         """Return True if every order size meets its instrument's minimum."""
         instruments = [t[0] for t in orders]
         size = [abs(t[1]) for t in orders]

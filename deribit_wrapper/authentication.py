@@ -16,6 +16,7 @@ from .utilities import ParamsType, ScopeType, seconds_to_hms
 
 
 class Authentication(DeribitBase):
+    # pylint: disable=too-many-instance-attributes
     __AUTH = "/public/auth"
 
     __GET_TIME = "/public/get_time"
@@ -41,6 +42,7 @@ class Authentication(DeribitBase):
         self._access_token = None
         self._token_expiry = None
         self._refresh_token = None
+        self._http_session = None
 
     @property
     def client_id(self) -> str:
@@ -87,12 +89,14 @@ class Authentication(DeribitBase):
 
     @property
     def _session(self) -> Session:
-        session = Session()
-        retry = Retry(connect=3, backoff_factor=0.5)
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-        return session
+        if self._http_session is None:
+            session = Session()
+            retry = Retry(connect=3, backoff_factor=0.5)
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+            self._http_session = session
+        return self._http_session
 
     @overload
     def _request(

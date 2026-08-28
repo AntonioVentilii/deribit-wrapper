@@ -29,9 +29,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Format
+      - name: Check format
         run: |
-          make format
+          make check-format
 
   lint:
     runs-on: ubuntu-latest

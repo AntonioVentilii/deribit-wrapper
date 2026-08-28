@@ -68,12 +68,13 @@ def test_authentication_failure_leads_to_exception(mock_request, auth_instance):
 def test_get_new_token_retrieves_new_token():
     mock_response = token_mock_response
 
-    with patch(
-        "deribit_wrapper.authentication.Authentication._request"
-    ) as mock_request, patch(
-        "deribit_wrapper.authentication.Authentication.create_new_scope",
-        return_value="session:fixed_session_name",
-    ) as mock_create_new_scope:
+    with (
+        patch("deribit_wrapper.authentication.Authentication._request") as mock_request,
+        patch(
+            "deribit_wrapper.authentication.Authentication.create_new_scope",
+            return_value="session:fixed_session_name",
+        ) as mock_create_new_scope,
+    ):
         mock_request.return_value = mock_response
 
         auth = Authentication(

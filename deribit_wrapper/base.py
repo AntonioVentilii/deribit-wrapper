@@ -3,7 +3,6 @@
 from __future__ import absolute_import, annotations
 
 import logging
-import time
 
 
 class DeribitBase:
@@ -18,7 +17,8 @@ class DeribitBase:
         super().__init__()
         if env not in self.__ENVS:
             raise ValueError(
-                f"Environment '{env}' not supported. Supported environments: {self.__ENVS.keys()}"
+                f"Environment '{env}' not supported. "
+                f"Supported environments: {', '.join(self.__ENVS)}."
             )
         self._env = env
         if instance_name is None:
@@ -34,13 +34,13 @@ class DeribitBase:
 
     @env.setter
     def env(self, value):
-        logging.warning(
-            "Changing environment from %s to %s. You have 10 seconds to abort...",
-            self.env,
-            value,
-        )
-        for _ in range(10):
-            time.sleep(1)
+        if value not in self.__ENVS:
+            raise ValueError(
+                f"Environment '{value}' not supported. "
+                f"Supported environments: {', '.join(self.__ENVS)}."
+            )
+        if value == self._env:
+            return
         self._env = value
         logging.warning("Environment changed to %s.", self.env)
 

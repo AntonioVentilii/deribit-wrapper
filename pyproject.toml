@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deribit_wrapper"
+version = "0.5.0"
+description = "A Python wrapper for seamless integration with Deribit's trading API, offering easy access to market data, account management, and trading operations."
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Antonio Ventilii", email = "antonioventilii@gmail.com" },
+]
+requires-python = ">=3.10"
+dependencies = [
+    "requests",
+    "numpy",
+    "pandas",
+    "urllib3",
+    "progressbar2",
+    "cryptography>=42.0.0",
+]
+keywords = ["deribit", "api", "wrapper", "cryptocurrency", "trading"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/AntonioVentilii/deribit-wrapper"
+"Source Code" = "https://github.com/AntonioVentilii/deribit-wrapper"
+"Issue Tracker" = "https://github.com/AntonioVentilii/deribit-wrapper/issues"
+
+[tool.setuptools.packages.find]
+include = ["deribit_wrapper*"]

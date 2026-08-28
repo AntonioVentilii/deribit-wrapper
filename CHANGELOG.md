@@ -5,6 +5,32 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2](https://github.com/AntonioVentilii/deribit-wrapper/compare/v0.6.1...v0.6.2) (2026-08-28)
+
+
+### Features
+
+* ship py.typed so consumers get the type hints ([#97](https://github.com/AntonioVentilii/deribit-wrapper/issues/97)) ([6573f2a](https://github.com/AntonioVentilii/deribit-wrapper/commit/6573f2a363f08f89db31a644fda13a16b1f1d86f))
+
+
+### Bug Fixes
+
+* bound the temporarily-unavailable retry loop ([#101](https://github.com/AntonioVentilii/deribit-wrapper/issues/101)) ([c616df2](https://github.com/AntonioVentilii/deribit-wrapper/commit/c616df23af999cc9d161bbb876dc8595f329bbf5))
+* raise a clear error when an API key id is not found ([#103](https://github.com/AntonioVentilii/deribit-wrapper/issues/103)) ([1682641](https://github.com/AntonioVentilii/deribit-wrapper/commit/168264188bb557ae10db1a31c20cd973ab2a172d))
+* simulated cancel/close make no request and match live shapes ([#104](https://github.com/AntonioVentilii/deribit-wrapper/issues/104)) ([e12add6](https://github.com/AntonioVentilii/deribit-wrapper/commit/e12add6d9896b505c9c19bc51a13d81d3292c50b))
+* simulated mode also suppresses close_position and cancel_orders ([#100](https://github.com/AntonioVentilii/deribit-wrapper/issues/100)) ([232bfb4](https://github.com/AntonioVentilii/deribit-wrapper/commit/232bfb4ec10a5852c29ecb5a37774813cea5dbba))
+
+
+### Performance Improvements
+
+* concatenate DataFrames once instead of per iteration ([#102](https://github.com/AntonioVentilii/deribit-wrapper/issues/102)) ([bf0d07b](https://github.com/AntonioVentilii/deribit-wrapper/commit/bf0d07b2ec13af325364c3431ffd4f7510b88e26))
+
+
+### Documentation
+
+* correct the simulated flag description in the README ([#98](https://github.com/AntonioVentilii/deribit-wrapper/issues/98)) ([fee7483](https://github.com/AntonioVentilii/deribit-wrapper/commit/fee74830ca9dc7faad5c79887a939a4c608b7551))
+* simulated mode now covers close_position and cancel_orders ([#105](https://github.com/AntonioVentilii/deribit-wrapper/issues/105)) ([33b207c](https://github.com/AntonioVentilii/deribit-wrapper/commit/33b207c52623be026daa678249cab5ef731368df))
+
 ## [0.6.1](https://github.com/AntonioVentilii/deribit-wrapper/compare/v0.6.0...v0.6.1) (2026-08-28)
 
 

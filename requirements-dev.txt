@@ -1,4 +1,5 @@
 pydocstyle==6.3.0
+python-dotenv==1.2.3
 pyflakes==3.4.0
 pylint==4.0.7
 pytest==9.1.1

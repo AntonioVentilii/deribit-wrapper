@@ -119,3 +119,26 @@ class TestDeribitIntegration(TestCase):
     def test_get_api_version(self):
         version = self.auth.get_api_version()
         self.assertIsInstance(version, str)
+
+
+def test_session_is_reused(auth_instance):
+    """Test that the HTTP session is created once and reused across calls."""
+    first = auth_instance._session
+    second = auth_instance._session
+    assert first is second
+
+
+def test_session_is_per_instance():
+    """Test that separate clients do not share an HTTP session."""
+    a = Authentication(env="test", client_id="id_a", client_secret="secret_a")
+    b = Authentication(env="test", client_id="id_b", client_secret="secret_b")
+    assert a._session is not b._session
+
+
+def test_close_releases_and_is_idempotent(auth_instance):
+    """Test that close() shuts the session and is safe to call twice."""
+    session = auth_instance._session
+    auth_instance.close()
+    assert auth_instance._http_session is None
+    auth_instance.close()  # idempotent
+    assert auth_instance._session is not session  # a new session is created lazily

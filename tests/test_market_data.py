@@ -242,7 +242,8 @@ def test_check_min_trade_amount_fails_below_minimum(mocker, market_data):
 
 
 def test_get_nth_future_picks_nearest_valid_expiry(mocker, market_data):
-    ref = pd.Timestamp("2024-01-01")
+    # tz-aware reference so the margin comparison is deterministic in any host tz
+    ref = pd.Timestamp("2024-01-01", tz="UTC")
     far = 1719532800000  # 2024-06-28 UTC in epoch milliseconds
     near = 1711670400000  # 2024-03-29 UTC
     too_close = 1704110400000  # 2024-01-01T12:00 UTC

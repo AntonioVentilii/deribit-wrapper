@@ -78,6 +78,7 @@ class MarketData(Authentication):
         client_secret: Optional[str] = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
+        private_key_password: str | bytes | None = None,
         progress_bar_desc: Optional[str] = None,
     ):
         """Create a market data client, optionally labelling its progress bars."""
@@ -87,6 +88,7 @@ class MarketData(Authentication):
             client_secret=client_secret,
             private_key=private_key,
             auth_method=auth_method,
+            private_key_password=private_key_password,
         )
         self.progress_bar_desc = progress_bar_desc
 

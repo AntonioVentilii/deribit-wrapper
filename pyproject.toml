@@ -45,9 +45,9 @@ files = ["deribit_wrapper"]
 # removed one at a time, the way the pydocstyle D1xx ignores were.
 
 # Suppressions are scoped per module so the rest of the package stays strict.
-# market_data and account_management are the pandas DataFrame surface; the
-# authentication entry covers cryptography's broad private-key union and goes
-# away once the key loading is centralised.
+# What remains is the pandas DataFrame surface; authentication needed an entry
+# for cryptography's private-key union until #107 centralised key loading, and
+# is now checked strictly.
 [[tool.mypy.overrides]]
 module = "deribit_wrapper.market_data"
 disable_error_code = [
@@ -64,9 +64,6 @@ disable_error_code = [
 module = "deribit_wrapper.account_management"
 disable_error_code = ["assignment", "list-item", "return-value", "var-annotated"]
 
-[[tool.mypy.overrides]]
-module = "deribit_wrapper.authentication"
-disable_error_code = ["arg-type", "call-arg", "union-attr"]
 
 [[tool.mypy.overrides]]
 module = "deribit_wrapper.trading"

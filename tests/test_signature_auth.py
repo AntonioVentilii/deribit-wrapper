@@ -237,3 +237,113 @@ def test_missing_credentials_exceptions():
         ValueError, match="Cannot generate new token without Client ID and Private Key"
     ):
         auth_asym_token.get_new_token()
+
+
+def _write_key(tmp_path, key, password=None):
+    from cryptography.hazmat.primitives import serialization
+
+    enc = (
+        serialization.BestAvailableEncryption(password)
+        if password
+        else serialization.NoEncryption()
+    )
+    pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=enc,
+    )
+    path = tmp_path / "key.pem"
+    path.write_bytes(pem)
+    return path, pem
+
+
+def test_encrypted_key_without_password_gives_clear_error(tmp_path):
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    _, pem = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate(), b"hunter2")
+    auth = Authentication(env="test", client_id="id", private_key=pem.decode())
+    with pytest.raises(ValueError, match="private_key_password"):
+        auth._generate_signature(1, "nonce")
+
+
+def test_encrypted_key_with_password_signs(tmp_path):
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    _, pem = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate(), b"hunter2")
+    auth = Authentication(
+        env="test",
+        client_id="id",
+        private_key=pem.decode(),
+        private_key_password="hunter2",
+    )
+    assert auth._generate_signature(1, "nonce")
+
+
+def test_private_key_path_that_does_not_exist_is_reported(tmp_path):
+    auth = Authentication(
+        env="test", client_id="id", private_key=str(tmp_path / "missing.pem")
+    )
+    with pytest.raises(ValueError, match="neither PEM content nor a readable file"):
+        auth._generate_signature(1, "nonce")
+
+
+def test_private_key_loaded_from_file_path(tmp_path):
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    path, _ = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate())
+    auth = Authentication(env="test", client_id="id", private_key=str(path))
+    assert auth._generate_signature(1, "nonce")
+
+
+def test_private_key_is_parsed_only_once(tmp_path):
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    path, _ = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate())
+    auth = Authentication(env="test", client_id="id", private_key=str(path))
+    auth._generate_signature(1, "a")
+    loaded = auth._loaded_private_key
+    auth._generate_signature(2, "b")
+    assert auth._loaded_private_key is loaded
+
+
+def test_unsupported_key_type_is_rejected():
+    class FakeKey:
+        pass
+
+    auth = Authentication(env="test", client_id="id", private_key=FakeKey())
+    with pytest.raises(ValueError, match="Unsupported private key type"):
+        auth._generate_signature(1, "nonce")
+
+
+def test_directory_path_is_rejected_not_opened(tmp_path):
+    """A directory passes exists() but cannot be read as a key."""
+    auth = Authentication(env="test", client_id="id", private_key=str(tmp_path))
+    with pytest.raises(ValueError, match="readable file"):
+        auth._generate_signature(1, "nonce")
+
+
+def test_private_key_password_reaches_the_client_constructor(tmp_path):
+    """The password must be usable from DeribitClient, not just Authentication."""
+    from deribit_wrapper import DeribitClient
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    _, pem = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate(), b"pw")
+    client = DeribitClient(
+        env="test",
+        client_id="id",
+        private_key=pem.decode(),
+        private_key_password="pw",
+    )
+    assert client._generate_signature(1, "nonce")
+
+
+def test_changing_the_password_invalidates_the_cached_key(tmp_path):
+    """Updating the password through set_credentials must drop the cached key."""
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    _, pem = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate(), b"pw")
+    auth = Authentication(env="test", client_id="id", private_key=pem.decode())
+    with pytest.raises(ValueError, match="private_key_password"):
+        auth._generate_signature(1, "nonce")
+    auth.set_credentials("id", private_key_password="pw")
+    assert auth._generate_signature(1, "nonce")

@@ -147,7 +147,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
             url=self.api_url,
             data=json.dumps(data),
             headers=headers,
-            timeout=self.request_timeout,
+            timeout=self._validated_timeout(),
         )
 
         if give_results:
@@ -231,6 +231,20 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
                     continue
                 return self._request(uri, params, give_results=give_results)
         return {}
+
+    def _validated_timeout(self) -> float:
+        """Return the request timeout, rejecting values that would disable it."""
+        timeout = self.request_timeout
+        # requests treats None as "wait forever", which is the hang this guards
+        if not isinstance(timeout, (int, float)) or isinstance(timeout, bool):
+            raise ValueError(
+                f"request_timeout must be a positive number, got {timeout!r}."
+            )
+        if timeout <= 0:
+            raise ValueError(
+                f"request_timeout must be greater than 0, got {timeout!r}."
+            )
+        return timeout
 
     def _retry_budget(self) -> tuple[int, float]:
         """Return the validated retry budget, rejecting misconfigured values."""

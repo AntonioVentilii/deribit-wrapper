@@ -34,13 +34,14 @@ Instantiate the `DeribitClient` class with the appropriate parameters:
 - `client_id`: Your Deribit client ID.
 - `client_secret`: Your Deribit client secret.
 - `env`: Which Deribit environment to talk to, `'test'` or `'prod'`. **Defaults to `'prod'`.**
-- `simulated`: Defaults to `True`. Order placement (`order`, `market_order`, `bulk_order`) returns a
-  simulated result instead of submitting anything. It does **not** change the environment, and it does
-  **not** cover `close_position` or `cancel_orders` — those always execute against `env`.
+- `simulated`: Defaults to `True`. Every state-changing trading call — `order`, `market_order`,
+  `bulk_order`, `close_position` and `cancel_orders` — returns a simulated result instead of submitting
+  anything. It does **not** change the environment.
 
-> **⚠️ `simulated` is not a safety net for the environment.** `env` alone decides whether you are on
-> production or test. A client left at the defaults is pointed at **production**: reads and cancellations
-> are real, only order placement is simulated. To keep everything off production, pass `env="test"`.
+> **⚠️ `simulated` is not an environment switch.** `env` alone decides whether you are on production or
+> test, and it defaults to `'prod'`. A client left at the defaults reads **real production data**
+> (balances, positions, transaction logs); only the trading calls above are simulated. To keep
+> everything off production, pass `env="test"`.
 
 Example — production reads, simulated order placement (the defaults):
 
@@ -94,9 +95,9 @@ client = DeribitClient(
 - **Place a Market Order:** `market_order(asset, amount, label=None, reduce_only=False)` — simulated when
   `simulated=True`
 - **Bulk Orders:** `bulk_order(orders, label=None)` — simulated when `simulated=True`
-- **Close a Position:** `close_position(asset, limit=None)` — **always executes**
-- **Cancel Orders:** `cancel_orders(currency=None, kind=None, order_type=None, label=None)` —
-  **always executes**
+- **Close a Position:** `close_position(asset, limit=None)` — simulated when `simulated=True`
+- **Cancel Orders:** `cancel_orders(currency=None, kind=None, order_type=None, label=None)` — simulated
+  when `simulated=True`
 - and more...
 
 ## Examples

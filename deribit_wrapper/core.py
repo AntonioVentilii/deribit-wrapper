@@ -1,3 +1,5 @@
+"""Public entry point exposing the fully assembled Deribit client."""
+
 from __future__ import absolute_import, annotations
 
 import json
@@ -10,6 +12,8 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 
 class DeribitClient(Trading):
+    """Deribit API client combining market data, account management, and trading."""
+
     def __init__(
         self,
         env: str = "prod",
@@ -20,6 +24,7 @@ class DeribitClient(Trading):
         progress_bar_desc: str = None,
         simulated: bool = True,
     ):
+        """Create a client; simulated=True keeps orders local instead of sending them."""
         super().__init__(
             client_id=client_id,
             client_secret=client_secret,

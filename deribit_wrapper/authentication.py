@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import, annotations
 
+import logging
+
 import json
 import time
 import uuid
@@ -15,6 +17,8 @@ from urllib3.util.retry import Retry
 from .base import DeribitBase
 from .exceptions import DeribitClientWarning, ServiceUnavailable, RequestError
 from .utilities import ParamsType, ScopeType, seconds_to_hms
+
+logger = logging.getLogger(__name__)
 
 # Bounded by default so a stalled venue cannot block a caller for an hour;
 # override per client via unavailable_max_attempts / unavailable_wait_seconds.
@@ -189,18 +193,17 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         if error_code == -32602:
             self._handle_invalid_params(uri, error_data)
         else:
-            print(f"Error code {error_code} for request {uri}.")
+            logger.error("Error code %s for request %s.", error_code, uri)
         return {}
 
     def _handle_too_many_requests(
         self, uri: str, params: ParamsType, error_data: dict, give_results: bool
     ) -> dict:
         wait = error_data.get("wait", 1)
-        print(f"Too many requests for URI {uri}. Waiting {seconds_to_hms(wait)}...")
-        for i in range(wait):
-            time.sleep(1)
-            print(f"Wait {seconds_to_hms(wait - i)}...", end="\r", flush=True)
-        print()
+        logger.warning(
+            "Too many requests for URI %s. Waiting %s...", uri, seconds_to_hms(wait)
+        )
+        time.sleep(wait)
         return self._request(uri, params, give_results=give_results)
 
     def _handle_unauthorised(
@@ -210,8 +213,10 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         if reason == "invalid_token":
             max_attempts = 3
             for i in range(max_attempts):
-                print(
-                    f"Invalid token. Trying to get a new one. Attempt {i + 1} of {max_attempts}..."
+                logger.warning(
+                    "Invalid token. Trying to get a new one. Attempt %s of %s...",
+                    i + 1,
+                    max_attempts,
                 )
                 try:
                     self.get_new_token()
@@ -241,9 +246,11 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
     ) -> dict:
         max_attempts, wait = self._retry_budget()
         for i in range(max_attempts):
-            print(
-                f"Temporarily unavailable. Waiting {seconds_to_hms(int(wait))} "
-                f"[{i + 1}/{max_attempts}]..."
+            logger.warning(
+                "Temporarily unavailable. Waiting %s [%s/%s]...",
+                seconds_to_hms(int(wait)),
+                i + 1,
+                max_attempts,
             )
             time.sleep(wait)
             ret = self._request(uri, params, give_results=give_results)
@@ -258,8 +265,10 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
     ) -> dict:
         max_attempts = 60
         for i in range(max_attempts):
-            print(
-                f"Settlement in progress. Waiting 1 second [{i + 1}/{max_attempts}]..."
+            logger.info(
+                "Settlement in progress. Waiting 1 second [%s/%s]...",
+                i + 1,
+                max_attempts,
             )
             time.sleep(1)
             ret = self._request(uri, params, give_results=give_results)
@@ -272,7 +281,9 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
     def _handle_invalid_params(self, uri: str, error_data: dict):
         param = error_data.get("param")
         reason = error_data.get("reason")
-        print(f"Invalid params for request {uri}: param={param}, reason={reason}")
+        logger.error(
+            "Invalid params for request %s: param=%s, reason=%s", uri, param, reason
+        )
 
     @property
     def access_token(self) -> str:

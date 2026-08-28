@@ -319,3 +319,12 @@ def test_cancel_orders_live_still_executes(mocker, live_trading):
     calls = record_requests(mocker, live_trading, response={"ok": 1})
     live_trading.cancel_orders(currency="BTC")
     assert calls[0][0] == "/private/cancel_all_by_kind_or_type"
+
+
+def test_error_handler_logs_instead_of_printing(mocker, live_trading, caplog, capsys):
+    """Test that handled errors go to logging, not the caller's stdout."""
+    record_requests(mocker, live_trading, response={"code": 99999})
+    with caplog.at_level("ERROR", logger="deribit_wrapper.trading"):
+        live_trading._order_with_error_handling("/private/buy", {"amount": 1})
+    assert "99999" in caplog.text
+    assert capsys.readouterr().out == ""

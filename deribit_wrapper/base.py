@@ -3,6 +3,7 @@
 from __future__ import absolute_import, annotations
 
 import logging
+from typing import Optional
 
 
 class DeribitBase:
@@ -12,7 +13,7 @@ class DeribitBase:
     __API_URL = "/api/v2"
     _instance_count = 0  # Class variable to keep track of the instance number
 
-    def __init__(self, env: str = "prod", instance_name: str = None):
+    def __init__(self, env: str = "prod", instance_name: Optional[str] = None):
         """Create a client for the given environment, optionally naming the instance."""
         super().__init__()
         if env not in self.__ENVS:

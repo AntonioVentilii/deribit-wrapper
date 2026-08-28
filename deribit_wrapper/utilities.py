@@ -3,12 +3,13 @@
 from __future__ import absolute_import, annotations
 
 from datetime import datetime
-from typing import List, Literal, Tuple, Union, get_args
+from typing import Any, List, Literal, MutableMapping, Tuple, Union, get_args
 
 import numpy as np
 import pandas as pd
 
-ParamsType = dict[str, Union[str, int, float]]
+# a request payload: values are whatever the JSON-RPC endpoint accepts
+ParamsType = MutableMapping[str, Any]
 
 MarketOrderType = Tuple[str, float]
 LimitOrderType = Tuple[str, float, float]
@@ -56,7 +57,7 @@ def seconds_to_hms(seconds: int) -> str:
 
 def flatten_dict(d: dict, parent_key: str = "", sep: str = "_") -> dict:
     """Flatten a nested dict, joining keys with the given separator."""
-    items = []
+    items: list[tuple[str, Any]] = []
     for k, v in d.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
         if isinstance(v, dict):

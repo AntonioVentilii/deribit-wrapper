@@ -5,7 +5,7 @@ from __future__ import absolute_import, annotations
 import logging
 from datetime import datetime
 
-from typing import Any
+from typing import Optional, Any
 
 import pandas as pd
 from progressbar import progressbar
@@ -24,7 +24,10 @@ from .utilities import (
 
 
 def name_instrument(
-    currency: str, expiry: DatetimeType, strike: StrikeType = None, opt_type: str = None
+    currency: str,
+    expiry: DatetimeType,
+    strike: Optional[StrikeType] = None,
+    opt_type: Optional[str] = None,
 ) -> str:
     """Build a Deribit instrument name from currency, expiry, and optional strike/type."""
     c = currency
@@ -71,11 +74,11 @@ class MarketData(Authentication):
     def __init__(
         self,
         env: str = "prod",
-        client_id: str = None,
-        client_secret: str = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
-        progress_bar_desc: str = None,
+        progress_bar_desc: Optional[str] = None,
     ):
         """Create a market data client, optionally labelling its progress bars."""
         super().__init__(
@@ -117,7 +120,9 @@ class MarketData(Authentication):
         return self.get_market_book(currency=self.currencies)
 
     def get_market_book(
-        self, currency: str | list[str] = None, instrument: str | list[str] = None
+        self,
+        currency: Optional[str | list[str]] = None,
+        instrument: Optional[str | list[str]] = None,
     ) -> pd.DataFrame:
         """Return the book summary for the given currencies or instruments."""
         if currency is not None and instrument is not None:
@@ -143,8 +148,8 @@ class MarketData(Authentication):
 
     def get_instruments(
         self,
-        currencies: str | list[str] = None,
-        kind: str = None,
+        currencies: Optional[str | list[str]] = None,
+        kind: Optional[str] = None,
         as_list: bool = False,
     ) -> pd.DataFrame | list[str]:
         """Return active and expired instruments, deduplicated and sorted."""
@@ -212,20 +217,22 @@ class MarketData(Authentication):
         return ret
 
     def get_future_instruments(
-        self, currencies: str | list[str] = None, as_list: bool = False
+        self, currencies: Optional[str | list[str]] = None, as_list: bool = False
     ) -> pd.DataFrame | list[str]:
         """Return future instruments for the given currencies."""
         df = self.get_instruments(currencies=currencies, kind="future", as_list=as_list)
         return df
 
     def get_option_instruments(
-        self, currencies: str | list[str] = None, as_list: bool = False
+        self, currencies: Optional[str | list[str]] = None, as_list: bool = False
     ) -> pd.DataFrame | list[str]:
         """Return option instruments for the given currencies."""
         df = self.get_instruments(currencies=currencies, kind="option", as_list=as_list)
         return df
 
-    def get_nth_future(self, currency: str, n: int, ref_date: datetime = None) -> str:
+    def get_nth_future(
+        self, currency: str, n: int, ref_date: Optional[datetime] = None
+    ) -> str:
         """Return the nth future by expiry after a margin past the reference date."""
         ref_date = ref_date or pd.Timestamp.now()
         margin = ref_date + pd.DateOffset(days=1, hours=1)
@@ -242,7 +249,9 @@ class MarketData(Authentication):
                 ].iloc[-1]
         return ret
 
-    def get_first_future(self, currency: str, ref_date: datetime = None) -> str:
+    def get_first_future(
+        self, currency: str, ref_date: Optional[datetime] = None
+    ) -> str:
         """Return the nearest future for a currency."""
         return self.get_nth_future(currency, n=1, ref_date=ref_date)
 
@@ -265,7 +274,9 @@ class MarketData(Authentication):
         ret = self.get_closest_strike_by_future(future)
         return ret
 
-    def min_trade_amount(self, instruments: str | list[str] = None) -> pd.Series:
+    def min_trade_amount(
+        self, instruments: Optional[str | list[str]] = None
+    ) -> pd.Series:
         """Return minimum trade amounts as a Series indexed by instrument name."""
         df = self.get_instruments()
         df.set_index("instrument_name", inplace=True)
@@ -324,8 +335,8 @@ class MarketData(Authentication):
     def get_market_data_history(
         self,
         asset: str,
-        start_date: str | datetime = None,
-        end_date: str | datetime = None,
+        start_date: Optional[str | datetime] = None,
+        end_date: Optional[str | datetime] = None,
         resolution: str = "1D",
     ) -> pd.DataFrame:
         """Return OHLC chart history for an instrument as a DataFrame."""
@@ -353,9 +364,9 @@ class MarketData(Authentication):
 
     def get_market_data(
         self,
-        assets: list[str] = None,
-        start_date: str | datetime = None,
-        end_date: str | datetime = None,
+        assets: Optional[list[str]] = None,
+        start_date: Optional[str | datetime] = None,
+        end_date: Optional[str | datetime] = None,
     ) -> pd.DataFrame:
         """Return concatenated price history for multiple instruments."""
         start_date = start_date or DEFAULT_START

@@ -36,3 +36,23 @@ include = ["deribit_wrapper*"]
 
 [tool.setuptools.package-data]
 deribit_wrapper = ["py.typed"]
+
+[tool.mypy]
+files = ["deribit_wrapper"]
+# The package ships py.typed, so annotations are part of the public contract and
+# CI must keep them honest. These codes are the residue of adopting mypy on an
+# existing codebase - mostly the pandas DataFrame surface - and are meant to be
+# removed one at a time, the way the pydocstyle D1xx ignores were.
+disable_error_code = [
+    "arg-type",
+    "assignment",
+    "call-arg",
+    "call-overload",
+    "dict-item",
+    "index",
+    "list-item",
+    "operator",
+    "return-value",
+    "union-attr",
+    "var-annotated",
+]

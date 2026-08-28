@@ -5,7 +5,7 @@ from __future__ import absolute_import, annotations
 import time
 from datetime import datetime
 
-from typing import Any
+from typing import Optional, Any
 
 import pandas as pd
 
@@ -55,12 +55,12 @@ class AccountManagement(MarketData):
 
     def __init__(
         self,
-        client_id: str = None,
-        client_secret: str = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
         env: str = "prod",
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
-        progress_bar_desc: str = None,
+        progress_bar_desc: Optional[str] = None,
     ):
         """Create an account management client."""
         super().__init__(
@@ -73,7 +73,9 @@ class AccountManagement(MarketData):
         )
 
     def get_account_summary(
-        self, currency: str | list[str] = None, subaccount_id: int = None
+        self,
+        currency: Optional[str | list[str]] = None,
+        subaccount_id: Optional[int] = None,
     ) -> pd.DataFrame:
         """Return the extended account summary per currency as a DataFrame."""
         uri = self.__GET_ACCOUNT_SUMMARY
@@ -97,7 +99,9 @@ class AccountManagement(MarketData):
         return df
 
     def get_margin_model(
-        self, currency: str | list[str] = None, subaccount_id: int = None
+        self,
+        currency: Optional[str | list[str]] = None,
+        subaccount_id: Optional[int] = None,
     ) -> pd.DataFrame:
         """Return the margin model configuration per currency."""
         df = self.get_account_summary(currency=currency, subaccount_id=subaccount_id)
@@ -128,7 +132,7 @@ class AccountManagement(MarketData):
             raise ValueError(f"API key {api_key_id} not found.")
         return matches[0]
 
-    def create_api_key(self, max_scope: str, name: str = None) -> dict:
+    def create_api_key(self, max_scope: str, name: Optional[str] = None) -> dict:
         """Create an API key with the given maximum scope and optional name."""
         uri = self.__CREATE_API_KEY
         params = {"max_scope": max_scope}
@@ -138,7 +142,7 @@ class AccountManagement(MarketData):
         return r
 
     def edit_api_key(
-        self, api_key_id: int | str, max_scope: str, name: str = None
+        self, api_key_id: int | str, max_scope: str, name: Optional[str] = None
     ) -> dict:
         """Edit an API key's maximum scope and optional name."""
         uri = self.__EDIT_API_KEY
@@ -278,7 +282,7 @@ class AccountManagement(MarketData):
     def _change_margin_model(
         self,
         margin_model: MarginModelType,
-        subaccount_id: int = None,
+        subaccount_id: Optional[int] = None,
         dry_run: bool = False,
     ) -> pd.DataFrame:
         uri = self.__CHANGE_MARGIN_MODEL
@@ -309,7 +313,7 @@ class AccountManagement(MarketData):
         return df
 
     def change_margin_model(
-        self, margin_model: MarginModelType, subaccount_id: int = None
+        self, margin_model: MarginModelType, subaccount_id: Optional[int] = None
     ) -> pd.DataFrame:
         """Change the margin model, optionally for one subaccount."""
         return self._change_margin_model(
@@ -317,7 +321,7 @@ class AccountManagement(MarketData):
         )
 
     def check_if_margin_model_change_is_possible(
-        self, margin_model: MarginModelType, subaccount_id: int = None
+        self, margin_model: MarginModelType, subaccount_id: Optional[int] = None
     ) -> bool:
         """Return True if a margin model change would keep margin rates below 1."""
         df = self._change_margin_model(
@@ -332,9 +336,9 @@ class AccountManagement(MarketData):
 
     def get_positions(
         self,
-        currency: str | list[str] = None,
-        kind: str = None,
-        subaccount_id: int = None,
+        currency: Optional[str | list[str]] = None,
+        kind: Optional[str] = None,
+        subaccount_id: Optional[int] = None,
     ) -> pd.DataFrame:
         """Return open positions per currency as a DataFrame."""
         uri = self.__GET_POSITIONS
@@ -355,10 +359,10 @@ class AccountManagement(MarketData):
 
     def get_transaction_log(
         self,
-        start: str | datetime = None,
-        end: str | datetime = None,
-        currency: str | list[str] = None,
-        query: str | list[str] = None,
+        start: Optional[str | datetime] = None,
+        end: Optional[str | datetime] = None,
+        currency: Optional[str | list[str]] = None,
+        query: Optional[str | list[str]] = None,
     ) -> pd.DataFrame:
         """Return the paginated transaction log for a period as a DataFrame."""
         start = start or DEFAULT_START
@@ -395,9 +399,9 @@ class AccountManagement(MarketData):
 
     def get_delivery_log(
         self,
-        start: str | datetime = None,
-        end: str | datetime = None,
-        currency: str | list[str] = None,
+        start: Optional[str | datetime] = None,
+        end: Optional[str | datetime] = None,
+        currency: Optional[str | list[str]] = None,
     ) -> pd.DataFrame:
         """Return delivery entries of the transaction log."""
         start = start or DEFAULT_START
@@ -406,9 +410,9 @@ class AccountManagement(MarketData):
 
     def get_flow_history(
         self,
-        start: str | datetime = None,
-        end: str | datetime = None,
-        currency: str | list[str] = None,
+        start: Optional[str | datetime] = None,
+        end: Optional[str | datetime] = None,
+        currency: Optional[str | list[str]] = None,
     ) -> pd.DataFrame:
         """Return deposit and transfer entries of the transaction log."""
         start = start or DEFAULT_START

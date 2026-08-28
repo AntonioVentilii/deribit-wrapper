@@ -6,9 +6,9 @@ import json
 import time
 import uuid
 import warnings
-from typing import Any, overload
+from typing import Any, Optional
 
-from requests import Response, Session
+from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -34,34 +34,34 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
     def __init__(
         self,
         env: str = "prod",
-        client_id: str = None,
-        client_secret: str = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
     ):
         """Create an authenticated client using credentials, a signature secret, or a private key."""
         super().__init__(env=env)
-        self._client_id = None
-        self._client_secret = None
-        self._private_key = None
+        self._client_id: str | None = None
+        self._client_secret: str | None = None
+        self._private_key: str | bytes | Any | None = None
         self._auth_method = auth_method
         self.set_credentials(
             client_id, client_secret, private_key=private_key, auth_method=auth_method
         )
-        self._access_token = None
-        self._token_expiry = None
-        self._refresh_token = None
+        self._access_token: str | None = None
+        self._token_expiry: int | None = None
+        self._refresh_token: str | None = None
         self._http_session: Session | None = None
         self.unavailable_max_attempts = UNAVAILABLE_MAX_ATTEMPTS
         self.unavailable_wait_seconds = UNAVAILABLE_WAIT_SECONDS
 
     @property
-    def client_id(self) -> str:
+    def client_id(self) -> str | None:
         """Return the configured client ID."""
         return self._client_id
 
     @property
-    def client_secret(self) -> str:
+    def client_secret(self) -> str | None:
         """Return the configured client secret."""
         return self._client_secret
 
@@ -71,16 +71,16 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         return self._private_key
 
     @property
-    def auth_method(self) -> str:
+    def auth_method(self) -> str | None:
         """Return the authentication method ('credentials', 'signature', or 'asymmetric')."""
         return self._auth_method
 
     def set_credentials(
         self,
-        client_id: str,
-        client_secret: str = None,
+        client_id: str | None,
+        client_secret: Optional[str] = None,
         private_key: str | bytes | Any | None = None,
-        auth_method: str = None,
+        auth_method: Optional[str] = None,
     ):
         """Set credentials and infer the authentication method from the inputs."""
         if auth_method is not None:
@@ -120,23 +120,15 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
             self._http_session.close()
             self._http_session = None
 
-    @overload
-    def _request(
-        self, uri: str, params: ParamsType, give_results: bool = True
-    ) -> dict | list[dict]: ...
-
-    @overload
-    def _request(
-        self, uri: str, params: ParamsType, give_results: False
-    ) -> Response: ...
-
-    def _request(
-        self, uri: str, params: ParamsType, give_results: bool = True
-    ) -> dict | list[dict] | Response:
+    def _request(self, uri: str, params: ParamsType, give_results: bool = True) -> Any:
         data = {"jsonrpc": "2.0", "id": 1, "method": uri, "params": params}
         headers = None
         if uri.startswith("/private"):
             token = self.access_token
+            if not token:
+                raise RequestError(
+                    f"Cannot call the private endpoint {uri} without an access token."
+                )
             headers = {"Authorization": "bearer " + token}
         r = self._session.post(url=self.api_url, data=json.dumps(data), headers=headers)
 
@@ -275,7 +267,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         print(f"Invalid params for request {uri}: param={param}, reason={reason}")
 
     @property
-    def access_token(self) -> str:
+    def access_token(self) -> str | None:
         """Return a valid access token, refreshing it first if expired."""
         self.refresh_token_if_expired()
         return self._access_token
@@ -295,11 +287,11 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
 
     def create_new_scope(
         self,
-        session_name: str = None,
-        account: ScopeType = None,
-        trade: ScopeType = None,
-        wallet: ScopeType = None,
-        block_trade: ScopeType = None,
+        session_name: Optional[str] = None,
+        account: Optional[ScopeType] = None,
+        trade: Optional[ScopeType] = None,
+        wallet: Optional[ScopeType] = None,
+        block_trade: Optional[ScopeType] = None,
         expires_in: int = 0,
         ip: str = "",
     ) -> str:

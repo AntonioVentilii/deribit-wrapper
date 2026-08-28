@@ -119,7 +119,7 @@ class AccountManagement(MarketData):
         return df
 
     def get_api_key(self, api_key_id: str) -> dict:
-        """Return a single API key looked up by its id."""
+        """Return the API key with the given id; raises if no key matches."""
         keys = self.list_api_keys()
         key = keys[keys["id"] == api_key_id].to_dict(orient="records")
         return key[0]

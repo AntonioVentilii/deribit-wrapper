@@ -33,15 +33,41 @@ Instantiate the `DeribitClient` class with the appropriate parameters:
 
 - `client_id`: Your Deribit client ID.
 - `client_secret`: Your Deribit client secret.
-- `simulated`: Set to `True` to use the test environment or `False` to use the production environment.
-- `env`: Choose between `'test'` and `'prod'` environments. Defaults to `'prod'`.
+- `env`: Which Deribit environment to talk to, `'test'` or `'prod'`. **Defaults to `'prod'`.**
+- `simulated`: Defaults to `True`. Order placement (`order`, `market_order`, `bulk_order`) returns a
+  simulated result instead of submitting anything. It does **not** change the environment, and it does
+  **not** cover `close_position` or `cancel_orders` — those always execute against `env`.
 
-Example:
+> **⚠️ `simulated` is not a safety net for the environment.** `env` alone decides whether you are on
+> production or test. A client left at the defaults is pointed at **production**: reads and cancellations
+> are real, only order placement is simulated. To keep everything off production, pass `env="test"`.
+
+Example — production reads, simulated order placement (the defaults):
 
 ```python
 from deribit_wrapper import DeribitClient
 
 client = DeribitClient(client_id="your_client_id", client_secret="your_client_secret")
+```
+
+Example — fully isolated on the test environment:
+
+```python
+client = DeribitClient(
+    env="test",
+    client_id="your_test_client_id",
+    client_secret="your_test_client_secret",
+)
+```
+
+Example — placing real orders (production, nothing simulated):
+
+```python
+client = DeribitClient(
+    client_id="your_client_id",
+    client_secret="your_client_secret",
+    simulated=False,
+)
 ```
 
 ## Usage
@@ -63,9 +89,14 @@ client = DeribitClient(client_id="your_client_id", client_secret="your_client_se
 
 ### Trading
 
-- **Place an Order:** `order(asset, amount, limit=None, label=None, reduce_only=False)`
-- **Place a Market Order:** `market_order(asset, amount, label=None, reduce_only=False)`
-- **Bulk Orders:** `bulk_order(orders, label=None)`
+- **Place an Order:** `order(asset, amount, limit=None, label=None, reduce_only=False)` — simulated when
+  `simulated=True`
+- **Place a Market Order:** `market_order(asset, amount, label=None, reduce_only=False)` — simulated when
+  `simulated=True`
+- **Bulk Orders:** `bulk_order(orders, label=None)` — simulated when `simulated=True`
+- **Close a Position:** `close_position(asset, limit=None)` — **always executes**
+- **Cancel Orders:** `cancel_orders(currency=None, kind=None, order_type=None, label=None)` —
+  **always executes**
 - and more...
 
 ## Examples

@@ -7,7 +7,6 @@ from typing import Any
 
 import pandas as pd
 
-from dev_scripts.utilities_dev import create_multilevel_df
 from .exceptions import (
     SubaccountNameAlreadyTaken,
     SubaccountNameWrongFormat,
@@ -24,6 +23,7 @@ from .utilities import (
     DEFAULT_START,
     MarginModelType,
     MarketOrderType,
+    create_multilevel_df,
     from_dt_to_ts,
     seconds_to_hms,
 )

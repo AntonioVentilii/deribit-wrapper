@@ -33,3 +33,6 @@ Homepage = "https://github.com/AntonioVentilii/deribit-wrapper"
 
 [tool.setuptools.packages.find]
 include = ["deribit_wrapper*"]
+
+[tool.setuptools.package-data]
+deribit_wrapper = ["py.typed"]

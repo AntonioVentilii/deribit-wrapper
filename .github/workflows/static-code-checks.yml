@@ -86,10 +86,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-  #      TODO: improve documentation
-  #      - name: Docs style
-  #        run: |
-  #          make docs
+      - name: Docs style
+        run: |
+          make docs
 
   may-merge:
     needs: [ 'format', 'lint', 'test', 'docs' ]

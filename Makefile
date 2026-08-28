@@ -11,6 +11,6 @@ test:
 	pytest
 
 docs:
-	pydocstyle
+	pydocstyle deribit_wrapper
 
 all: lint check format test docs

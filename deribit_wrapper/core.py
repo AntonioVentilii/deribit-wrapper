@@ -4,7 +4,7 @@ from __future__ import absolute_import, annotations
 
 import json
 import logging
-from typing import Any
+from typing import Optional, Any
 
 from .trading import Trading
 
@@ -17,12 +17,12 @@ class DeribitClient(Trading):
     def __init__(
         self,
         env: str = "prod",
-        client_id: str = None,
-        client_secret: str = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
         private_key_password: str | bytes | None = None,
-        progress_bar_desc: str = None,
+        progress_bar_desc: Optional[str] = None,
         simulated: bool = True,
     ):
         """Create a client; simulated=True keeps orders local instead of sending them."""

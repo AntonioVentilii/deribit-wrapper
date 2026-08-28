@@ -51,6 +51,23 @@ jobs:
         run: |
           make lint
 
+  typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # type checking is version-independent here, so it runs once rather than
+      # across the matrix; numpy's stubs also require a modern interpreter
+      - name: Set up Python
+        uses: ./.github/actions/prepare
+        with:
+          python-version: '3.13'
+
+      - name: Typecheck
+        run: |
+          make typecheck
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -91,7 +108,7 @@ jobs:
           make docs
 
   may-merge:
-    needs: [ 'format', 'lint', 'test', 'docs' ]
+    needs: [ 'format', 'lint', 'typecheck', 'test', 'docs' ]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:

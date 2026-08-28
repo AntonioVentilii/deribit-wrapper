@@ -7,7 +7,7 @@ import logging
 import time
 from datetime import datetime
 
-from typing import Any
+from typing import Optional, Any
 
 import pandas as pd
 from progressbar import progressbar
@@ -35,13 +35,13 @@ class Trading(AccountManagement):
 
     def __init__(
         self,
-        client_id: str = None,
-        client_secret: str = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
         env: str = "prod",
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
         private_key_password: str | bytes | None = None,
-        progress_bar_desc: str = None,
+        progress_bar_desc: Optional[str] = None,
         simulated: bool = True,
     ):
         """Create a trading client; simulated=True disables live order placement."""
@@ -57,7 +57,7 @@ class Trading(AccountManagement):
         self.simulated = simulated
 
     def instrument_margins(
-        self, instrument: str, amount: float | int = 1, price: float = None
+        self, instrument: str, amount: float | int = 1, price: Optional[float] = None
     ) -> dict:
         """Return buy and sell margins for an instrument at a price."""
         if price is None:
@@ -68,7 +68,7 @@ class Trading(AccountManagement):
         return ret
 
     def instrument_margin(
-        self, instrument: str, amount: float | int = 1, price: float = None
+        self, instrument: str, amount: float | int = 1, price: Optional[float] = None
     ) -> float:
         """Return the buy margin for positive amounts and the sell margin otherwise."""
         side = "buy" if amount > 0 else "sell"
@@ -77,13 +77,13 @@ class Trading(AccountManagement):
         ]
 
     def instrument_buy_margin(
-        self, instrument: str, amount: float | int = 1, price: float = None
+        self, instrument: str, amount: float | int = 1, price: Optional[float] = None
     ) -> float:
         """Return the buy margin for an instrument."""
         return self.instrument_margins(instrument, amount=amount, price=price)["buy"]
 
     def instrument_sell_margin(
-        self, instrument: str, amount: float | int = 1, price: float = None
+        self, instrument: str, amount: float | int = 1, price: Optional[float] = None
     ) -> float:
         """Return the sell margin for an instrument."""
         return self.instrument_margins(instrument, amount=amount, price=price)["sell"]
@@ -137,9 +137,9 @@ class Trading(AccountManagement):
 
     def get_trade_history(
         self,
-        start: str | datetime = None,
-        end: str | datetime = None,
-        currency: str | list[str] = None,
+        start: Optional[str | datetime] = None,
+        end: Optional[str | datetime] = None,
+        currency: Optional[str | list[str]] = None,
         include_order_data: bool = False,
     ) -> pd.DataFrame:
         """Return trades for a period, optionally enriched with order data."""
@@ -160,7 +160,11 @@ class Trading(AccountManagement):
         return self.get_trade_history(include_order_data=include_order_data)
 
     def _error_handler(
-        self, ret: dict, uri: str, params: dict, exclude_codes: list[int] = None
+        self,
+        ret: dict,
+        uri: str,
+        params: dict,
+        exclude_codes: Optional[list[int]] = None,
     ) -> dict:
         exclude_codes = exclude_codes or []
         code = ret.get("code")
@@ -193,7 +197,7 @@ class Trading(AccountManagement):
         uri: str,
         params: dict,
         handle_error: bool = True,
-        exclude_codes: list[int] = None,
+        exclude_codes: Optional[list[int]] = None,
     ) -> dict:
         ret = self._request(uri, params)
         if handle_error:
@@ -204,8 +208,8 @@ class Trading(AccountManagement):
         self,
         asset: str,
         amount: float | int,
-        limit: float | int = None,
-        label: str = None,
+        limit: Optional[float | int] = None,
+        label: Optional[str] = None,
         reduce_only: bool = False,
     ) -> dict:
         label = None if label == "" else label
@@ -248,8 +252,8 @@ class Trading(AccountManagement):
         self,
         asset: str,
         amount: float | int,
-        limit: float | int = None,
-        label: str = None,
+        limit: Optional[float | int] = None,
+        label: Optional[str] = None,
         reduce_only: bool = False,
     ) -> dict:
         """Place an order after a minimum-size check; placement errors are returned as {'error': ...}."""
@@ -267,14 +271,14 @@ class Trading(AccountManagement):
         self,
         asset: str,
         amount: float | int,
-        label: str = None,
+        label: Optional[str] = None,
         reduce_only: bool = False,
     ) -> dict:
         """Place a market order for the given amount."""
         ret = self.order(asset, amount, label=label, reduce_only=reduce_only)
         return ret
 
-    def bulk_order(self, orders: OrdersType, label: str = None) -> list[dict]:
+    def bulk_order(self, orders: OrdersType, label: Optional[str] = None) -> list[dict]:
         """Place multiple market or limit orders sequentially."""
         self.check_min_trade_amount(orders)
         ret = []
@@ -287,7 +291,7 @@ class Trading(AccountManagement):
             ret.append(self._order(asset, amount, limit=limit, label=label))
         return ret
 
-    def close_position(self, asset: str, limit: float | int = None) -> dict:
+    def close_position(self, asset: str, limit: Optional[float | int] = None) -> dict:
         """Close a position at market, or at a limit price if given; simulated when simulated=True."""
         if self.simulated:
             ret = {
@@ -312,7 +316,9 @@ class Trading(AccountManagement):
         ret = self._request(uri, params)
         return ret
 
-    def _cancel_by_label(self, label: str, currency: str | list[str] = None) -> dict:
+    def _cancel_by_label(
+        self, label: str, currency: Optional[str | list[str]] = None
+    ) -> dict:
         if self.simulated:
             simulated = {"info": SIMULATION_INFO, "label": label}
             if currency is None:
@@ -335,10 +341,10 @@ class Trading(AccountManagement):
 
     def cancel_orders(
         self,
-        currency: str | list[str] = None,
-        kind: str = None,
-        order_type: str = None,
-        label: str = None,
+        currency: Optional[str | list[str]] = None,
+        kind: Optional[str] = None,
+        order_type: Optional[str] = None,
+        label: Optional[str] = None,
     ) -> dict:
         """Cancel orders by label, or by currency, kind, and type."""
         if label is not None:

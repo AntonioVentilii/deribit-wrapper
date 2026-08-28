@@ -1,8 +1,10 @@
-.PHONY: lint check format test docs all
+.PHONY: lint check-format format test docs all
 
 format:
-	black .
 	ruff format .
+
+check-format:
+	ruff format --check .
 
 lint:
 	pylint deribit_wrapper
@@ -13,4 +15,4 @@ test:
 docs:
 	pydocstyle deribit_wrapper
 
-all: lint check format test docs
+all: lint check-format test docs

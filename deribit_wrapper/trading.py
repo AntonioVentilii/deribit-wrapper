@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import, annotations
 
+import logging
+
 import time
 from datetime import datetime
 
@@ -12,6 +14,8 @@ from progressbar import progressbar
 
 from .account_management import AccountManagement
 from .utilities import DEFAULT_END, DEFAULT_START, OrdersType
+
+logger = logging.getLogger(__name__)
 
 SIMULATION_INFO = "SIMULATION MODE - no trade executed"
 
@@ -171,16 +175,16 @@ class Trading(AccountManagement):
         # 10009: not enough funds
         elif code == 10009:
             if params.get("reduce_only"):
-                print("Not enough funds. Already tried as reduce only.")
+                logger.warning("Not enough funds. Already tried as reduce only.")
             else:
-                print("Not enough funds. Attempt as reduce only...")
+                logger.warning("Not enough funds. Attempt as reduce only...")
                 params["reduce_only"] = True
                 ret = self._order_with_error_handling(
                     uri, params, exclude_codes=[10009]
                 )
 
         else:
-            print(f"Error code {code} not handled yet.")
+            logger.error("Error code %s not handled yet.", code)
 
         return ret
 

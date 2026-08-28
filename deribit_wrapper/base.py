@@ -4,6 +4,8 @@ from __future__ import absolute_import, annotations
 
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class DeribitBase:
     """Hold the Deribit environment (test or prod) and derive the API URL."""
@@ -42,7 +44,7 @@ class DeribitBase:
         if value == self._env:
             return
         self._env = value
-        logging.warning("Environment changed to %s.", self.env)
+        logger.warning("Environment changed to %s.", self.env)
 
     @property
     def api_url(self):

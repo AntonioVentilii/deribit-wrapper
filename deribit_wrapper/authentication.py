@@ -438,6 +438,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
                 )
         uri = self.__AUTH
         scope = self.create_new_scope(expires_in=expires_in)
+        params: ParamsType
         if use_refresh_token_if_available and self._refresh_token:
             params = {
                 "grant_type": "refresh_token",

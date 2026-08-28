@@ -43,16 +43,31 @@ files = ["deribit_wrapper"]
 # CI must keep them honest. These codes are the residue of adopting mypy on an
 # existing codebase - mostly the pandas DataFrame surface - and are meant to be
 # removed one at a time, the way the pydocstyle D1xx ignores were.
+
+# Suppressions are scoped per module so the rest of the package stays strict.
+# market_data and account_management are the pandas DataFrame surface; the
+# authentication entry covers cryptography's broad private-key union and goes
+# away once the key loading is centralised.
+[[tool.mypy.overrides]]
+module = "deribit_wrapper.market_data"
 disable_error_code = [
     "arg-type",
     "assignment",
-    "call-arg",
     "call-overload",
-    "dict-item",
     "index",
-    "list-item",
     "operator",
     "return-value",
     "union-attr",
-    "var-annotated",
 ]
+
+[[tool.mypy.overrides]]
+module = "deribit_wrapper.account_management"
+disable_error_code = ["assignment", "list-item", "return-value", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "deribit_wrapper.authentication"
+disable_error_code = ["arg-type", "call-arg", "union-attr"]
+
+[[tool.mypy.overrides]]
+module = "deribit_wrapper.trading"
+disable_error_code = ["assignment"]

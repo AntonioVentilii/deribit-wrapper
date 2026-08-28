@@ -22,6 +22,8 @@ from .utilities import (
     from_ts_to_dt,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def name_instrument(
     currency: str,
@@ -100,7 +102,7 @@ class MarketData(Authentication):
         try:
             ret = r["contract_size"]
         except KeyError:
-            logging.warning("No result found for asset %s.", asset)
+            logger.warning("No result found for asset %s.", asset)
             return {}
         return ret
 
@@ -306,7 +308,7 @@ class MarketData(Authentication):
         ret = ticker.get("last_price")
         if ret is None:
             ret = ticker.get("mark_price")
-            logging.warning(
+            logger.warning(
                 "Using mark price instead of last price for asset %s.", asset
             )
         if ret is None:
@@ -322,15 +324,13 @@ class MarketData(Authentication):
             mark = ticker["mark_price"]
             bid = mark
             ask = mark
-            logging.warning(
-                "Using mark price instead of mid price for asset %s.", asset
-            )
+            logger.warning("Using mark price instead of mid price for asset %s.", asset)
         elif bid is None:
             bid = ask
-            logging.warning("No bid available for mid calculation for asset %s.", asset)
+            logger.warning("No bid available for mid calculation for asset %s.", asset)
         elif ask is None:
             ask = bid
-            logging.warning("No ask available for mid calculation for asset %s.", asset)
+            logger.warning("No ask available for mid calculation for asset %s.", asset)
         ret = (bid + ask) / 2
         return ret
 
@@ -361,7 +361,7 @@ class MarketData(Authentication):
             df["date"] = df["datetime"].dt.date
             df.set_index("date", inplace=True)
         else:
-            print(status, "no data found for asset", asset)
+            logger.warning("%s: no data found for asset %s", status, asset)
         return df
 
     def get_market_data(

@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 import pytest
 
@@ -319,3 +321,35 @@ def test_cancel_orders_live_still_executes(mocker, live_trading):
     calls = record_requests(mocker, live_trading, response={"ok": 1})
     live_trading.cancel_orders(currency="BTC")
     assert calls[0][0] == "/private/cancel_all_by_kind_or_type"
+
+
+def test_error_handler_logs_instead_of_printing(mocker, live_trading, caplog, capsys):
+    """Test that handled errors go to logging, not the caller's stdout."""
+    record_requests(mocker, live_trading, response={"code": 99999})
+    with caplog.at_level("ERROR", logger="deribit_wrapper.trading"):
+        live_trading._order_with_error_handling("/private/buy", {"amount": 1})
+    assert "99999" in caplog.text
+    assert capsys.readouterr().out == ""
+
+
+def test_unconfigured_logging_stays_silent(mocker, live_trading, capsys):
+    """An app that never configures logging must see nothing on stdout or stderr."""
+    root = logging.getLogger()
+    saved_handlers, saved_level = root.handlers[:], root.level
+    root.handlers.clear()
+    try:
+        record_requests(mocker, live_trading, response={"code": 99999})
+        live_trading._order_with_error_handling("/private/buy", {"amount": 1})
+    finally:
+        root.handlers.extend(saved_handlers)
+        root.setLevel(saved_level)
+    captured = capsys.readouterr()
+    # without the package NullHandler these would reach stderr via lastResort
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_package_logger_has_a_null_handler():
+    """The library must ship a NullHandler so it is silent by default."""
+    handlers = logging.getLogger("deribit_wrapper").handlers
+    assert any(isinstance(h, logging.NullHandler) for h in handlers)

@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import, annotations
 
+import logging
+
 import time
 from datetime import datetime
 
@@ -29,6 +31,8 @@ from .utilities import (
     from_dt_to_ts,
     seconds_to_hms,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AccountManagement(MarketData):
@@ -248,13 +252,12 @@ class AccountManagement(MarketData):
         if error_code == 12006:
             wait = error_data.get("wait", 1)
             if wait_if_over_limit:
-                print(
-                    f"Waiting {seconds_to_hms(wait)} before removing subaccount {subaccount_id}."
+                logger.warning(
+                    "Waiting %s before removing subaccount %s.",
+                    seconds_to_hms(wait),
+                    subaccount_id,
                 )
-                for i in range(wait):
-                    time.sleep(1)
-                    print(f"Wait {seconds_to_hms(wait - i)}...", end="\r", flush=True)
-                print()
+                time.sleep(wait)
                 r = self._request(uri, params)
             else:
                 raise WaitRequiredError(

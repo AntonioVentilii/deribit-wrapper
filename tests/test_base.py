@@ -24,15 +24,29 @@ def test_invalid_environment_creation():
     assert "Environment 'invalid_env' not supported." in str(excinfo.value)
 
 
-def test_env_property_setter(mocker):
-    """Test the env property setter with a mocked logger and sleep."""
-    mocker.patch("time.sleep", return_value=None)  # Mock sleep to avoid delay.
-    mocker.patch("logging.warning")  # Mock logging to avoid actual log output.
-
+def test_env_property_setter():
+    """Test that the env property setter changes the environment immediately."""
     instance = DeribitBase(env="test")
-    instance.env = "prod"  # Change environment to prod.
+    instance.env = "prod"
 
     assert instance.env == "prod"
+    assert instance.api_url == "https://www.deribit.com/api/v2"
+
+
+def test_env_property_setter_rejects_invalid_env():
+    """Test that the env property setter validates the environment."""
+    instance = DeribitBase(env="test")
+    with pytest.raises(ValueError) as excinfo:
+        instance.env = "invalid_env"
+    assert "Environment 'invalid_env' not supported." in str(excinfo.value)
+    assert instance.env == "test"
+
+
+def test_env_property_setter_same_value_is_noop():
+    """Test that setting the current environment again is a no-op."""
+    instance = DeribitBase(env="test")
+    instance.env = "test"
+    assert instance.env == "test"
 
 
 def test_api_url_property():

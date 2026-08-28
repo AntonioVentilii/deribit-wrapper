@@ -283,7 +283,7 @@ def test_private_key_path_that_does_not_exist_is_reported(tmp_path):
     auth = Authentication(
         env="test", client_id="id", private_key=str(tmp_path / "missing.pem")
     )
-    with pytest.raises(ValueError, match="neither PEM content nor an existing file"):
+    with pytest.raises(ValueError, match="neither PEM content nor a readable file"):
         auth._generate_signature(1, "nonce")
 
 
@@ -313,3 +313,37 @@ def test_unsupported_key_type_is_rejected():
     auth = Authentication(env="test", client_id="id", private_key=FakeKey())
     with pytest.raises(ValueError, match="Unsupported private key type"):
         auth._generate_signature(1, "nonce")
+
+
+def test_directory_path_is_rejected_not_opened(tmp_path):
+    """A directory passes exists() but cannot be read as a key."""
+    auth = Authentication(env="test", client_id="id", private_key=str(tmp_path))
+    with pytest.raises(ValueError, match="readable file"):
+        auth._generate_signature(1, "nonce")
+
+
+def test_private_key_password_reaches_the_client_constructor(tmp_path):
+    """The password must be usable from DeribitClient, not just Authentication."""
+    from deribit_wrapper import DeribitClient
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    _, pem = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate(), b"pw")
+    client = DeribitClient(
+        env="test",
+        client_id="id",
+        private_key=pem.decode(),
+        private_key_password="pw",
+    )
+    assert client._generate_signature(1, "nonce")
+
+
+def test_changing_the_password_invalidates_the_cached_key(tmp_path):
+    """Updating the password through set_credentials must drop the cached key."""
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    _, pem = _write_key(tmp_path, ed25519.Ed25519PrivateKey.generate(), b"pw")
+    auth = Authentication(env="test", client_id="id", private_key=pem.decode())
+    with pytest.raises(ValueError, match="private_key_password"):
+        auth._generate_signature(1, "nonce")
+    auth.set_credentials("id", private_key_password="pw")
+    assert auth._generate_signature(1, "nonce")

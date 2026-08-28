@@ -21,6 +21,7 @@ class DeribitClient(Trading):
         client_secret: str = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
+        private_key_password: str | bytes | None = None,
         progress_bar_desc: str = None,
         simulated: bool = True,
     ):
@@ -31,6 +32,7 @@ class DeribitClient(Trading):
             env=env,
             private_key=private_key,
             auth_method=auth_method,
+            private_key_password=private_key_password,
             progress_bar_desc=progress_bar_desc,
             simulated=simulated,
         )

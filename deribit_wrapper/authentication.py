@@ -95,8 +95,12 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         client_secret: str = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = None,
+        private_key_password: str | bytes | None = None,
     ):
         """Set credentials and infer the authentication method from the inputs."""
+        if private_key_password is not None:
+            self._private_key_password = private_key_password
+            self._loaded_private_key = None
         if auth_method is not None:
             self._auth_method = auth_method
 
@@ -377,9 +381,9 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
             pkey_bytes = pkey.encode("utf-8") if isinstance(pkey, str) else pkey
             # a str without a PEM header is a path, not key material
             if isinstance(pkey, str) and "-----BEGIN" not in pkey:
-                if not os.path.exists(pkey):
+                if not os.path.isfile(pkey):
                     raise ValueError(
-                        "private_key is neither PEM content nor an existing file path."
+                        f"private_key is neither PEM content nor a readable file: {pkey!r}"
                     )
                 with open(pkey, "rb") as f:
                     pkey_bytes = f.read()

@@ -37,12 +37,14 @@ def from_ts_to_dt(timestamp: int | float, milliseconds: bool = True) -> datetime
 
 
 def from_dt_to_ts(date: str | datetime, milliseconds: bool = True) -> int:
-    """Convert a datetime or date string to an epoch timestamp (ms by default)."""
-    dt = pd.to_datetime(date)
-    ts = int(datetime.timestamp(dt))
+    """Convert a datetime or date string to an epoch timestamp (ms by default); naive inputs are treated as UTC."""
+    # naive datetimes are interpreted as UTC, matching from_ts_to_dt and the
+    # UTC epoch timestamps used by the Deribit API; the integer nanosecond
+    # value avoids float rounding and keeps millisecond precision
+    ns = int(pd.to_datetime(date, utc=True).value)
     if milliseconds:
-        ts *= int(1e3)
-    return ts
+        return ns // 10**6
+    return ns // 10**9
 
 
 def seconds_to_hms(seconds: int) -> str:

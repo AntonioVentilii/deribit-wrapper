@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3](https://github.com/AntonioVentilii/deribit-wrapper/compare/v0.6.2...v0.6.3) (2026-08-28)
+
+
+### Bug Fixes
+
+* harden the asymmetric signature path ([#107](https://github.com/AntonioVentilii/deribit-wrapper/issues/107)) ([f7ebf5d](https://github.com/AntonioVentilii/deribit-wrapper/commit/f7ebf5d2f8e1845583bb4d65bae0800a69a5475d))
+* send a timeout with every HTTP request ([#106](https://github.com/AntonioVentilii/deribit-wrapper/issues/106)) ([b4243bd](https://github.com/AntonioVentilii/deribit-wrapper/commit/b4243bddd70ad08c2581ddc216826b1d09f63493))
+
+
+### Code Refactoring
+
+* log through a named logger instead of printing ([#108](https://github.com/AntonioVentilii/deribit-wrapper/issues/108)) ([c2d07f3](https://github.com/AntonioVentilii/deribit-wrapper/commit/c2d07f356432b88f28dc0854a7f005f6d9b64217))
+
+
+### Continuous Integration
+
+* type-check with mypy and fix the annotations it caught ([#109](https://github.com/AntonioVentilii/deribit-wrapper/issues/109)) ([2d22038](https://github.com/AntonioVentilii/deribit-wrapper/commit/2d22038f7f04076818bbb044c8f1e853b37468d9))
+
 ## [0.6.2](https://github.com/AntonioVentilii/deribit-wrapper/compare/v0.6.1...v0.6.2) (2026-08-28)
 
 

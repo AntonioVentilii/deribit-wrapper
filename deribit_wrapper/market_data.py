@@ -102,36 +102,30 @@ class MarketData(Authentication):
         return sorted_currency_list
 
     def get_complete_market_book(self) -> pd.DataFrame:
-        uri = self.__GET_BOOK_BY_CURRENCY_URI
-        params = {"currency": ""}
-        currencies = self.currencies
-        ret = pd.DataFrame()
-        for currency in currencies:
-            params["currency"] = currency
-            r = self._request(uri, params)
-            df_temp = pd.DataFrame(r)
-            df_temp.dropna(axis=1, how="all", inplace=True)
-            ret = pd.concat([ret, df_temp], ignore_index=True)
-        return ret
+        return self.get_market_book(currency=self.currencies)
 
     def get_market_book(
-        self, currency: str = None, instrument: list[str] = None
+        self, currency: str | list[str] = None, instrument: str | list[str] = None
     ) -> pd.DataFrame:
-        ret = None
+        if currency is not None and instrument is not None:
+            raise ValueError("Provide either 'currency' or 'instrument', not both.")
         if currency is not None:
-            pass
+            uri = self.__GET_BOOK_BY_CURRENCY_URI
+            key = "currency"
+            values = [currency] if isinstance(currency, str) else currency
         elif instrument is not None:
             uri = self.__GET_BOOK_BY_INSTRUMENT_URI
-            params = {"instrument_name": ""}
-            ret = pd.DataFrame()
-            for i in instrument:
-                params["instrument_name"] = i
-                r = self._request(uri, params)
-                df_temp = pd.DataFrame(r)
-                df_temp.dropna(axis=1, how="all", inplace=True)
-                ret = pd.concat([ret, df_temp], ignore_index=True)
+            key = "instrument_name"
+            values = [instrument] if isinstance(instrument, str) else instrument
         else:
-            pass
+            raise ValueError("Either 'currency' or 'instrument' must be provided.")
+        frames = []
+        for value in values:
+            r = self._request(uri, {key: value})
+            df_temp = pd.DataFrame(r)
+            df_temp.dropna(axis=1, how="all", inplace=True)
+            frames.append(df_temp)
+        ret = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         return ret
 
     def get_instruments(

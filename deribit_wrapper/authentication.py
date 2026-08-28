@@ -283,8 +283,8 @@ class Authentication(DeribitBase):
 
     def _generate_signature(self, timestamp: int, nonce: str, data: str = "") -> str:
         # pylint: disable=too-many-locals,too-many-branches,import-outside-toplevel,broad-exception-caught,no-else-return
-        """
-        Generates the cryptographic signature for client_signature authentication.
+        r"""Generate the cryptographic signature for client_signature authentication.
+
         Message to sign format: timestamp + "\n" + nonce + "\n" + data
         """
         message_str = f"{timestamp}\n{nonce}\n{data}"

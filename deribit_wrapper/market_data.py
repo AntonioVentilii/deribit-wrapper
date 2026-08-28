@@ -156,15 +156,14 @@ class MarketData(Authentication):
             currencies = self.currencies
         else:
             currencies = [currencies] if isinstance(currencies, str) else currencies
-        ret = pd.DataFrame()
+        frames = []
         for currency in currencies:
             params["currency"] = currency
             params["expired"] = False
-            r = self._request(uri, params)
-            ret = pd.concat([ret, pd.DataFrame(r)], ignore_index=True)
+            frames.append(pd.DataFrame(self._request(uri, params)))
             params["expired"] = True
-            r = self._request(uri, params)
-            ret = pd.concat([ret, pd.DataFrame(r)], ignore_index=True)
+            frames.append(pd.DataFrame(self._request(uri, params)))
+        ret = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         if not ret.empty:
             ret.drop_duplicates(subset=["instrument_name"], inplace=True)
             ret.sort_values(
@@ -363,7 +362,7 @@ class MarketData(Authentication):
         end_date = end_date or DEFAULT_END
         if assets is None:
             assets = self.get_instruments(as_list=True)
-        df = pd.DataFrame()
+        frames = []
         prefix = (
             f"{self.progress_bar_desc}: Market data"
             if self.progress_bar_desc
@@ -373,6 +372,7 @@ class MarketData(Authentication):
             ret = self.get_market_data_history(asset, start_date, end_date)
             ret["instrument_name"] = asset
             ret.set_index("instrument_name", append=True, inplace=True)
-            df = pd.concat([df, ret])
+            frames.append(ret)
+        df = pd.concat(frames) if frames else pd.DataFrame()
         df.sort_index(inplace=True)
         return df

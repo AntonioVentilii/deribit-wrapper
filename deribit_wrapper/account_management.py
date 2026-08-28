@@ -84,12 +84,12 @@ class AccountManagement(MarketData):
             currency = self.currencies
         elif not isinstance(currency, list):
             currency = [currency]
-        df = pd.DataFrame()
+        frames = []
         for c in currency:
             params["currency"] = c
             r = self._request(uri, params)
-            r = {k: [v] for k, v in r.items()}
-            df = pd.concat([df, pd.DataFrame(r)], ignore_index=True)
+            frames.append(pd.DataFrame({k: [v] for k, v in r.items()}))
+        df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         if "currency" in df.columns:
             cols = df.columns.tolist()
             cols = ["currency"] + [col for col in cols if col != "currency"]
@@ -341,12 +341,11 @@ class AccountManagement(MarketData):
             currency = [currency]
         if subaccount_id is not None:
             params["subaccount_id"] = subaccount_id
-        ret = pd.DataFrame()
+        frames = []
         for c in currency:
             params["currency"] = c
-            r = self._request(uri, params)
-            ret = pd.concat([ret, pd.DataFrame(r)], ignore_index=True)
-        return ret
+            frames.append(pd.DataFrame(self._request(uri, params)))
+        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 
     def get_transaction_log(
         self,
@@ -368,7 +367,7 @@ class AccountManagement(MarketData):
             currency = [currency]
         params["start_timestamp"] = from_dt_to_ts(pd.to_datetime(start, utc=True))
         params["end_timestamp"] = from_dt_to_ts(pd.to_datetime(end, utc=True))
-        results = pd.DataFrame()
+        frames = []
         for q in query:
             if q is not None:
                 params["query"] = q
@@ -379,12 +378,12 @@ class AccountManagement(MarketData):
                 while continuation is not None:
                     ret = self._request(uri, params)
                     new_results = pd.DataFrame(ret["logs"])
-                    new_results_filtered = new_results.dropna(axis=1, how="all")
-                    results = pd.concat([results, new_results_filtered])
-                    if "profit_as_cashflow" in results.columns:
-                        results = results.astype({"profit_as_cashflow": bool})
+                    frames.append(new_results.dropna(axis=1, how="all"))
                     continuation = ret["continuation"]
                     params["continuation"] = continuation
+        results = pd.concat(frames) if frames else pd.DataFrame()
+        if "profit_as_cashflow" in results.columns:
+            results = results.astype({"profit_as_cashflow": bool})
         results.reset_index(drop=True, inplace=True)
         return results
 

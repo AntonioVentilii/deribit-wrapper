@@ -390,3 +390,41 @@ def test_get_complete_market_book_covers_all_currencies(mocker, market_data):
 def test_get_market_book_both_args_raises(market_data):
     with pytest.raises(ValueError, match="not both"):
         market_data.get_market_book(currency="BTC", instrument="BTC-PERPETUAL")
+
+
+def test_get_market_data_concatenates_and_sorts(mocker, market_data):
+    def history(asset, start, end):
+        return pd.DataFrame(
+            {"close": [1.0, 2.0]},
+            index=pd.Index(
+                pd.to_datetime(["2024-01-02", "2024-01-01"]).date, name="date"
+            ),
+        )
+
+    mocker.patch.object(market_data, "get_market_data_history", side_effect=history)
+    df = market_data.get_market_data(assets=["ETH-PERPETUAL", "BTC-PERPETUAL"])
+    assert list(df.index.names) == ["date", "instrument_name"]
+    assert len(df) == 4
+    # sorted by the full index, so dates ascend and instruments group within them
+    assert df.index.tolist() == sorted(df.index.tolist())
+
+
+def test_get_market_data_single_asset(mocker, market_data):
+    mocker.patch.object(
+        market_data,
+        "get_market_data_history",
+        return_value=pd.DataFrame(
+            {"close": [1.0]},
+            index=pd.Index(pd.to_datetime(["2024-01-01"]).date, name="date"),
+        ),
+    )
+    df = market_data.get_market_data(assets=["BTC-PERPETUAL"])
+    assert len(df) == 1
+    assert df.index.get_level_values("instrument_name").tolist() == ["BTC-PERPETUAL"]
+
+
+def test_get_market_data_empty_asset_list(mocker, market_data):
+    history = mocker.patch.object(market_data, "get_market_data_history")
+    df = market_data.get_market_data(assets=[])
+    assert df.empty
+    history.assert_not_called()

@@ -16,6 +16,11 @@ from .base import DeribitBase
 from .exceptions import DeribitClientWarning, ServiceUnavailable, RequestError
 from .utilities import ParamsType, ScopeType, seconds_to_hms
 
+# Bounded by default so a stalled venue cannot block a caller for an hour;
+# override per client via unavailable_max_attempts / unavailable_wait_seconds.
+UNAVAILABLE_MAX_ATTEMPTS = 5
+UNAVAILABLE_WAIT_SECONDS = 60
+
 
 class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attributes
     """Authenticate against the Deribit API and issue JSON-RPC requests."""
@@ -47,6 +52,8 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         self._token_expiry = None
         self._refresh_token = None
         self._http_session: Session | None = None
+        self.unavailable_max_attempts = UNAVAILABLE_MAX_ATTEMPTS
+        self.unavailable_wait_seconds = UNAVAILABLE_WAIT_SECONDS
 
     @property
     def client_id(self) -> str:
@@ -215,19 +222,36 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
                 return self._request(uri, params, give_results=give_results)
         return {}
 
+    def _retry_budget(self) -> tuple[int, float]:
+        """Return the validated retry budget, rejecting misconfigured values."""
+        attempts = self.unavailable_max_attempts
+        wait = self.unavailable_wait_seconds
+        if not isinstance(attempts, int) or attempts < 1:
+            raise ValueError(
+                f"unavailable_max_attempts must be an integer >= 1, got {attempts!r}."
+            )
+        if not isinstance(wait, (int, float)) or wait < 0:
+            raise ValueError(
+                f"unavailable_wait_seconds must be a non-negative number, got {wait!r}."
+            )
+        return attempts, wait
+
     def _handle_temporarily_unavailable(
         self, uri: str, params: ParamsType, give_results: bool
     ) -> dict:
-        max_attempts = 60
+        max_attempts, wait = self._retry_budget()
         for i in range(max_attempts):
             print(
-                f"Temporarily unavailable. Waiting 1 minute [{i + 1}/{max_attempts}]..."
+                f"Temporarily unavailable. Waiting {seconds_to_hms(int(wait))} "
+                f"[{i + 1}/{max_attempts}]..."
             )
-            time.sleep(60)
+            time.sleep(wait)
             ret = self._request(uri, params, give_results=give_results)
             if ret.get("code") != 13028:
                 return ret
-        raise ServiceUnavailable("Service temporarily unavailable.")
+        raise ServiceUnavailable(
+            f"Service temporarily unavailable after {max_attempts} attempts."
+        )
 
     def _handle_settlement_in_progress(
         self, uri: str, params: ParamsType, give_results: bool

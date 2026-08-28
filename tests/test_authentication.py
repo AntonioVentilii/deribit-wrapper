@@ -94,6 +94,52 @@ def test_get_new_token_retrieves_new_token():
         mock_create_new_scope.assert_called()
 
 
+def test_unauthorised_retries_token_acquisition(auth_instance):
+    """Test that failed token acquisitions are retried before re-requesting."""
+    with (
+        patch.object(
+            auth_instance, "get_new_token", side_effect=[KeyError, KeyError, None]
+        ) as mock_token,
+        patch.object(
+            auth_instance, "_request", return_value={"ok": True}
+        ) as mock_request,
+    ):
+        ret = auth_instance._handle_unauthorised(
+            "/private/get_positions", {}, {"reason": "invalid_token"}, True
+        )
+    assert mock_token.call_count == 3
+    mock_request.assert_called_once_with(
+        "/private/get_positions", {}, give_results=True
+    )
+    assert ret == {"ok": True}
+
+
+def test_unauthorised_gives_up_after_max_attempts(auth_instance):
+    """Test that after three failed token acquisitions no request is re-sent."""
+    with (
+        patch.object(
+            auth_instance, "get_new_token", side_effect=KeyError
+        ) as mock_token,
+        patch.object(auth_instance, "_request") as mock_request,
+    ):
+        ret = auth_instance._handle_unauthorised(
+            "/private/get_positions", {}, {"reason": "invalid_token"}, True
+        )
+    assert mock_token.call_count == 3
+    mock_request.assert_not_called()
+    assert ret == {}
+
+
+def test_unauthorised_other_reason_does_not_retry(auth_instance):
+    """Test that non-token reasons do not trigger token acquisition."""
+    with patch.object(auth_instance, "get_new_token") as mock_token:
+        ret = auth_instance._handle_unauthorised(
+            "/private/get_positions", {}, {"reason": "scope_exceeded"}, True
+        )
+    mock_token.assert_not_called()
+    assert ret == {}
+
+
 @skipIf(
     not os.environ.get("TEST_CLIENT_ID") or not os.environ.get("TEST_CLIENT_SECRET"),
     "Integration tests require TEST_CLIENT_ID and TEST_CLIENT_SECRET env variables",

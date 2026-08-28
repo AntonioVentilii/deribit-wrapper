@@ -12,7 +12,8 @@ class DeribitBase:
         super().__init__()
         if env not in self.__ENVS:
             raise ValueError(
-                f"Environment '{env}' not supported. Supported environments: {self.__ENVS.keys()}"
+                f"Environment '{env}' not supported. "
+                f"Supported environments: {', '.join(self.__ENVS)}."
             )
         self._env = env
         if instance_name is None:
@@ -29,7 +30,8 @@ class DeribitBase:
     def env(self, value):
         if value not in self.__ENVS:
             raise ValueError(
-                f"Environment '{value}' not supported. Supported environments: {self.__ENVS.keys()}"
+                f"Environment '{value}' not supported. "
+                f"Supported environments: {', '.join(self.__ENVS)}."
             )
         if value == self._env:
             return

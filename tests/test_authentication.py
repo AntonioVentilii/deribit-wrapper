@@ -133,3 +133,12 @@ def test_session_is_per_instance():
     a = Authentication(env="test", client_id="id_a", client_secret="secret_a")
     b = Authentication(env="test", client_id="id_b", client_secret="secret_b")
     assert a._session is not b._session
+
+
+def test_close_releases_and_is_idempotent(auth_instance):
+    """Test that close() shuts the session and is safe to call twice."""
+    session = auth_instance._session
+    auth_instance.close()
+    assert auth_instance._http_session is None
+    auth_instance.close()  # idempotent
+    assert auth_instance._session is not session  # a new session is created lazily

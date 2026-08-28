@@ -27,6 +27,7 @@ from .utilities import (
     DEFAULT_START,
     MarginModelType,
     MarketOrderType,
+    ParamsType,
     create_multilevel_df,
     from_dt_to_ts,
     seconds_to_hms,
@@ -291,7 +292,7 @@ class AccountManagement(MarketData):
         dry_run: bool = False,
     ) -> pd.DataFrame:
         uri = self.__CHANGE_MARGIN_MODEL
-        params = {"margin_model": margin_model, "dry_run": dry_run}
+        params: ParamsType = {"margin_model": margin_model, "dry_run": dry_run}
         if subaccount_id is not None:
             params["subaccount_id"] = subaccount_id
         r = self._request(uri, params)
@@ -337,7 +338,7 @@ class AccountManagement(MarketData):
             df[("new_state", "maintenance_margin_rate")] < 1
         )
         check = df[["check_initial_margin", "check_maintenance_margin"]].all().all()
-        return check
+        return bool(check)
 
     def get_positions(
         self,
@@ -347,7 +348,7 @@ class AccountManagement(MarketData):
     ) -> pd.DataFrame:
         """Return open positions per currency as a DataFrame."""
         uri = self.__GET_POSITIONS
-        params = {"currency": ""}
+        params: ParamsType = {"currency": ""}
         if kind is not None:
             params["kind"] = kind
         if currency is None:
@@ -373,9 +374,10 @@ class AccountManagement(MarketData):
         start = start or DEFAULT_START
         end = end or DEFAULT_END
         uri = self.__GET_TRANSACTION_LOG
-        params = {}
-        if not isinstance(query, list):
-            query = [query]
+        params: ParamsType = {}
+        queries: list[str | None] = (
+            [query] if not isinstance(query, list) else list(query)
+        )
         if currency is None:
             currency = self.currencies
         elif not isinstance(currency, list):
@@ -383,7 +385,7 @@ class AccountManagement(MarketData):
         params["start_timestamp"] = from_dt_to_ts(pd.to_datetime(start, utc=True))
         params["end_timestamp"] = from_dt_to_ts(pd.to_datetime(end, utc=True))
         frames = []
-        for q in query:
+        for q in queries:
             if q is not None:
                 params["query"] = q
             for c in currency:
@@ -431,7 +433,7 @@ class AccountManagement(MarketData):
     ) -> dict:
         """Return portfolio margins for simulated positions, grouped by currency."""
         uri = self.__GET_PORTFOLIO_MARGINS
-        data = {}
+        data: dict[str, dict[str, float]] = {}
         for instrument, amount in orders:
             currency = self.get_base_currency(instrument)
             if currency not in data:

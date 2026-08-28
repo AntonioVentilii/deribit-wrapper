@@ -13,7 +13,7 @@ import pandas as pd
 from progressbar import progressbar
 
 from .account_management import AccountManagement
-from .utilities import DEFAULT_END, DEFAULT_START, OrdersType
+from .utilities import DEFAULT_END, DEFAULT_START, OrdersType, ParamsType
 
 logger = logging.getLogger(__name__)
 
@@ -306,7 +306,7 @@ class Trading(AccountManagement):
                 ret["price"] = limit
             return ret
         uri = self.__CLOSE_POSITION
-        params = {
+        params: ParamsType = {
             "instrument_name": asset,
             "type": "market",
         }

@@ -13,19 +13,14 @@ permissions: {}
 jobs:
   pr-title:
     runs-on: ubuntu-latest
-    # The title comes from the event payload, so no API access is needed.
     permissions: {}
     steps:
-      # This repository squash-merges, so the PR title becomes the commit
-      # message release-please reads. A type it does not recognise is dropped
-      # silently: no release and no changelog entry, even for a bug fix. The
-      # types below are exactly the changelog-sections in
-      # release-please-config.json, so the gate and the changelog cannot drift.
+      # These types must stay in sync with changelog-sections in
+      # release-please-config.json: release-please silently ignores any other.
       - name: Validate conventional commit PR title
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          # Scope is optional: this repository's history is scopeless.
           types='feat|fix|perf|deps|revert|refactor|docs|build|ci|test|style|chore'
           pattern="^($types)(\([-a-zA-Z0-9,._/]+\))?!?: .+$"
 

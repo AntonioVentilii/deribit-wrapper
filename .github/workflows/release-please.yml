@@ -16,9 +16,6 @@ jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-24.04
-    # Skip (instead of fail) until the release bot app is configured on this
-    # repo: RELEASE_BOT_APP_ID variable + RELEASE_BOT_PRIVATE_KEY secret.
-    if: ${{ vars.RELEASE_BOT_APP_ID != '' && secrets.RELEASE_BOT_PRIVATE_KEY != '' }}
     steps:
       - name: Generate bot token
         id: app-token

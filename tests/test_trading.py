@@ -232,9 +232,12 @@ def test_get_orders_one_request_per_id(mocker, trading):
 
 def test_close_position_simulated_does_not_call_api(mocker, trading):
     calls = record_requests(mocker, trading)
-    mocker.patch.object(trading, "last_price", return_value=42000.0)
+    last_price = mocker.patch.object(trading, "last_price", return_value=42000.0)
     ret = trading.close_position("BTC-PERPETUAL")
     assert calls == []
+    # last_price would issue a real ticker request, so a market close must not use it
+    last_price.assert_not_called()
+    assert "price" not in ret
     assert "SIMULATION" in ret["info"]
     assert ret["instrument_name"] == "BTC-PERPETUAL"
 
@@ -252,7 +255,25 @@ def test_cancel_orders_simulated_does_not_call_api(mocker, trading):
     calls = record_requests(mocker, trading)
     ret = trading.cancel_orders(currency="BTC", kind="option")
     assert calls == []
-    assert "SIMULATION" in ret["info"]
+    # same per-currency shape as live mode
+    assert set(ret) == {"BTC"}
+    assert "SIMULATION" in ret["BTC"]["info"]
+
+
+def test_cancel_orders_simulated_shape_matches_live(mocker, trading, live_trading):
+    record_requests(mocker, trading)
+    record_requests(mocker, live_trading, response={"ok": 1})
+    simulated = trading.cancel_orders(currency=["BTC", "ETH"])
+    live = live_trading.cancel_orders(currency=["BTC", "ETH"])
+    assert set(simulated) == set(live)
+
+
+def test_cancel_by_label_simulated_shape_matches_live(mocker, trading, live_trading):
+    record_requests(mocker, trading)
+    record_requests(mocker, live_trading, response={"ok": 1})
+    simulated = trading.cancel_orders(label="x", currency=["BTC", "ETH"])
+    live = live_trading.cancel_orders(label="x", currency=["BTC", "ETH"])
+    assert set(simulated) == set(live)
 
 
 def test_cancel_by_label_simulated_does_not_call_api(mocker, trading):
@@ -261,6 +282,31 @@ def test_cancel_by_label_simulated_does_not_call_api(mocker, trading):
     assert calls == []
     assert "SIMULATION" in ret["info"]
     assert ret["label"] == "my-label"
+
+
+def test_simulated_trading_never_touches_private_endpoints(mocker, trading):
+    """Simulated calls may read public data, but must never hit /private."""
+    calls = record_requests(
+        mocker, trading, response=lambda uri, params: [{"currency": "BTC"}]
+    )
+    trading.cancel_orders()
+    trading.cancel_orders(label="x")
+    trading.close_position("BTC-PERPETUAL")
+    private = [uri for uri, _ in calls if uri.startswith("/private")]
+    assert private == []
+
+
+def test_cancel_orders_simulated_no_currency_uses_account_currencies(mocker, trading):
+    calls = record_requests(mocker, trading)
+    mocker.patch.object(
+        type(trading),
+        "currencies",
+        new_callable=mocker.PropertyMock,
+        return_value=["BTC", "ETH"],
+    )
+    ret = trading.cancel_orders()
+    assert calls == []
+    assert set(ret) == {"BTC", "ETH"}
 
 
 def test_close_position_live_still_executes(mocker, live_trading):

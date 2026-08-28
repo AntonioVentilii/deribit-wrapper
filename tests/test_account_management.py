@@ -299,3 +299,22 @@ def test_check_if_margin_model_change_is_possible(mocker, account):
     not_ok = pd.DataFrame([[1.5, 0.3]], columns=columns)
     mocker.patch.object(account, "_change_margin_model", return_value=not_ok)
     assert not account.check_if_margin_model_change_is_possible("cross_pm")
+
+
+def test_get_api_key_not_found_raises_value_error(mocker, account):
+    keys = pd.DataFrame([{"id": 1, "name": "key1"}])
+    mocker.patch.object(account, "list_api_keys", return_value=keys)
+    with pytest.raises(ValueError, match="API key 99 not found"):
+        account.get_api_key(99)
+
+
+def test_get_api_key_empty_list_raises_value_error(mocker, account):
+    mocker.patch.object(account, "list_api_keys", return_value=pd.DataFrame())
+    with pytest.raises(ValueError, match="not found"):
+        account.get_api_key(1)
+
+
+def test_get_api_key_accepts_string_id_for_integer_key(mocker, account):
+    keys = pd.DataFrame([{"id": 1, "name": "key1"}, {"id": 2, "name": "key2"}])
+    mocker.patch.object(account, "list_api_keys", return_value=keys)
+    assert account.get_api_key("2") == {"id": 2, "name": "key2"}

@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pandas as pd
+
 from deribit_wrapper.utilities import from_dt_to_ts, from_ts_to_dt, seconds_to_hms
 
 # NOTE: from_dt_to_ts converts naive datetimes via the LOCAL timezone
@@ -34,7 +36,8 @@ def test_from_ts_to_dt_seconds():
 
 def test_from_ts_to_dt_clips_overflow_instead_of_raising():
     dt = from_ts_to_dt(2**62)
-    assert dt is not None
+    assert pd.notna(dt)
+    assert dt <= pd.Timestamp.max
 
 
 def test_seconds_to_hms():

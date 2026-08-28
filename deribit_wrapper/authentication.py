@@ -189,6 +189,11 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
 
         return ret
 
+    # The logging calls in these handlers report `uri`, which is always one of the
+    # hardcoded endpoint constants above ("/private/buy", "/public/auth", ...) and
+    # never credential material. CodeQL's clear-text-logging query taints it
+    # because the params dict, which does carry client_secret on the auth grant,
+    # is threaded through the same handlers for the retry; hence the suppressions.
     def _handle_error(
         self,
         uri: str,
@@ -216,6 +221,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         if error_code == -32602:
             self._handle_invalid_params(uri, error_data)
         else:
+            # codeql[py/clear-text-logging-sensitive-data]
             logger.error("Error code %s for request %s.", error_code, uri)
         return {}
 
@@ -223,6 +229,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         self, uri: str, params: ParamsType, error_data: dict, give_results: bool
     ) -> dict:
         wait = error_data.get("wait", 1)
+        # codeql[py/clear-text-logging-sensitive-data]
         logger.warning(
             "Too many requests for URI %s. Waiting %s...", uri, seconds_to_hms(wait)
         )
@@ -318,6 +325,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
     def _handle_invalid_params(self, uri: str, error_data: dict):
         param = error_data.get("param")
         reason = error_data.get("reason")
+        # codeql[py/clear-text-logging-sensitive-data]
         logger.error(
             "Invalid params for request %s: param=%s, reason=%s", uri, param, reason
         )

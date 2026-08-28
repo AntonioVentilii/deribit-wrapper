@@ -41,7 +41,7 @@ Example:
 ```python
 from deribit_wrapper import DeribitClient
 
-client = DeribitClient(client_id='your_client_id', client_secret='your_client_secret')
+client = DeribitClient(client_id="your_client_id", client_secret="your_client_secret")
 ```
 
 ## Usage
@@ -73,21 +73,21 @@ client = DeribitClient(client_id='your_client_id', client_secret='your_client_se
 1. **Retrieving Market Data:**
 
 ```python
-ticker_info = client.get_ticker('BTC-25JUN21')
+ticker_info = client.get_ticker("BTC-25JUN21")
 print(ticker_info)
 ```
 
 2. **Placing a Market Order:**
 
 ```python
-order_response = client.market_order('BTC-25JUN21', 1)
+order_response = client.market_order("BTC-25JUN21", 1)
 print(order_response)
 ```
 
 3. **Getting Account Summary:**
 
 ```python
-account_summary = client.get_account_summary('BTC')
+account_summary = client.get_account_summary("BTC")
 print(account_summary)
 ```
 

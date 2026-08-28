@@ -173,39 +173,39 @@ def test_instrument_margins_fetches_price_if_missing(mocker, trading):
     }
 
 
-def test_close_position_market(mocker, trading):
-    calls = record_requests(mocker, trading, response={})
-    trading.close_position("BTC-PERPETUAL")
+def test_close_position_market(mocker, live_trading):
+    calls = record_requests(mocker, live_trading, response={})
+    live_trading.close_position("BTC-PERPETUAL")
     uri, params = calls[0]
     assert uri == "/private/close_position"
     assert params == {"instrument_name": "BTC-PERPETUAL", "type": "market"}
 
 
-def test_close_position_limit(mocker, trading):
-    calls = record_requests(mocker, trading, response={})
-    trading.close_position("BTC-PERPETUAL", limit=42000.0)
+def test_close_position_limit(mocker, live_trading):
+    calls = record_requests(mocker, live_trading, response={})
+    live_trading.close_position("BTC-PERPETUAL", limit=42000.0)
     _, params = calls[0]
     assert params["type"] == "limit"
     assert params["price"] == 42000.0
 
 
-def test_cancel_orders_by_label_without_currency(mocker, trading):
-    calls = record_requests(mocker, trading, response={"cancelled": 1})
-    ret = trading.cancel_orders(label="my-label")
+def test_cancel_orders_by_label_without_currency(mocker, live_trading):
+    calls = record_requests(mocker, live_trading, response={"cancelled": 1})
+    ret = live_trading.cancel_orders(label="my-label")
     assert calls == [("/private/cancel_by_label", {"label": "my-label"})]
     assert ret == {"cancelled": 1}
 
 
-def test_cancel_orders_by_label_per_currency(mocker, trading):
-    calls = record_requests(mocker, trading, response={"cancelled": 1})
-    ret = trading.cancel_orders(label="my-label", currency=["BTC", "ETH"])
+def test_cancel_orders_by_label_per_currency(mocker, live_trading):
+    calls = record_requests(mocker, live_trading, response={"cancelled": 1})
+    ret = live_trading.cancel_orders(label="my-label", currency=["BTC", "ETH"])
     assert [params["currency"] for _, params in calls] == ["BTC", "ETH"]
     assert set(ret) == {"BTC", "ETH"}
 
 
-def test_cancel_orders_by_kind_and_type(mocker, trading):
-    calls = record_requests(mocker, trading, response={"cancelled": 2})
-    ret = trading.cancel_orders(currency="BTC", kind="option", order_type="limit")
+def test_cancel_orders_by_kind_and_type(mocker, live_trading):
+    calls = record_requests(mocker, live_trading, response={"cancelled": 2})
+    ret = live_trading.cancel_orders(currency="BTC", kind="option", order_type="limit")
     uri, params = calls[0]
     assert uri == "/private/cancel_all_by_kind_or_type"
     assert params == {"currency": "BTC", "kind": "option", "type": "limit"}
@@ -228,3 +228,48 @@ def test_get_orders_one_request_per_id(mocker, trading):
     df = trading.get_orders(["a", "b", "c"])
     assert [params["order_id"] for _, params in calls] == ["a", "b", "c"]
     assert len(df) == 3
+
+
+def test_close_position_simulated_does_not_call_api(mocker, trading):
+    calls = record_requests(mocker, trading)
+    mocker.patch.object(trading, "last_price", return_value=42000.0)
+    ret = trading.close_position("BTC-PERPETUAL")
+    assert calls == []
+    assert "SIMULATION" in ret["info"]
+    assert ret["instrument_name"] == "BTC-PERPETUAL"
+
+
+def test_close_position_simulated_uses_limit_price(mocker, trading):
+    record_requests(mocker, trading)
+    last_price = mocker.patch.object(trading, "last_price")
+    ret = trading.close_position("BTC-PERPETUAL", limit=41000.0)
+    assert ret["type"] == "limit"
+    assert ret["price"] == 41000.0
+    last_price.assert_not_called()
+
+
+def test_cancel_orders_simulated_does_not_call_api(mocker, trading):
+    calls = record_requests(mocker, trading)
+    ret = trading.cancel_orders(currency="BTC", kind="option")
+    assert calls == []
+    assert "SIMULATION" in ret["info"]
+
+
+def test_cancel_by_label_simulated_does_not_call_api(mocker, trading):
+    calls = record_requests(mocker, trading)
+    ret = trading.cancel_orders(label="my-label")
+    assert calls == []
+    assert "SIMULATION" in ret["info"]
+    assert ret["label"] == "my-label"
+
+
+def test_close_position_live_still_executes(mocker, live_trading):
+    calls = record_requests(mocker, live_trading, response={"ok": 1})
+    live_trading.close_position("BTC-PERPETUAL")
+    assert calls[0][0] == "/private/close_position"
+
+
+def test_cancel_orders_live_still_executes(mocker, live_trading):
+    calls = record_requests(mocker, live_trading, response={"ok": 1})
+    live_trading.cancel_orders(currency="BTC")
+    assert calls[0][0] == "/private/cancel_all_by_kind_or_type"

@@ -2,14 +2,19 @@
 
 from __future__ import absolute_import, annotations
 
-import logging
-
+import hashlib
+import hmac
 import json
+import logging
+import os
 import time
 import uuid
 import warnings
 from typing import Any, overload
 
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec, ed25519, padding, rsa
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from requests import Response, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -46,12 +51,15 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         client_secret: str = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
+        private_key_password: str | bytes | None = None,
     ):
         """Create an authenticated client using credentials, a signature secret, or a private key."""
         super().__init__(env=env)
         self._client_id = None
         self._client_secret = None
         self._private_key = None
+        self._private_key_password = private_key_password
+        self._loaded_private_key = None
         self._auth_method = auth_method
         self.set_credentials(
             client_id, client_secret, private_key=private_key, auth_method=auth_method
@@ -90,13 +98,18 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         client_secret: str = None,
         private_key: str | bytes | Any | None = None,
         auth_method: str = None,
+        private_key_password: str | bytes | None = None,
     ):
         """Set credentials and infer the authentication method from the inputs."""
+        if private_key_password is not None:
+            self._private_key_password = private_key_password
+            self._loaded_private_key = None
         if auth_method is not None:
             self._auth_method = auth_method
 
         if private_key is not None:
             self._private_key = private_key
+            self._loaded_private_key = None
             if self._auth_method == "credentials":
                 self._auth_method = "asymmetric"
 
@@ -368,78 +381,68 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         final_scope = " ".join(scope_parts)
         return final_scope
 
+    def _load_private_key(self):
+        """Load and cache the private key from a path, PEM content, or key object."""
+        if self._loaded_private_key is not None:
+            return self._loaded_private_key
+
+        pkey = self._private_key
+        if isinstance(pkey, (str, bytes)):
+            pkey_bytes = pkey.encode("utf-8") if isinstance(pkey, str) else pkey
+            # a str without a PEM header is a path, not key material
+            if isinstance(pkey, str) and "-----BEGIN" not in pkey:
+                if not os.path.isfile(pkey):
+                    raise ValueError(
+                        f"private_key is neither PEM content nor a readable file: {pkey!r}"
+                    )
+                with open(pkey, "rb") as f:
+                    pkey_bytes = f.read()
+            password = self._private_key_password
+            if isinstance(password, str):
+                password = password.encode("utf-8")
+            try:
+                pkey = load_pem_private_key(pkey_bytes, password=password)
+            except TypeError as exc:
+                raise ValueError(
+                    "This private key is encrypted; pass private_key_password."
+                ) from exc
+
+        self._loaded_private_key = pkey
+        return pkey
+
     def _generate_signature(self, timestamp: int, nonce: str, data: str = "") -> str:
-        # pylint: disable=too-many-locals,too-many-branches,import-outside-toplevel,broad-exception-caught,no-else-return
         r"""Generate the cryptographic signature for client_signature authentication.
 
         Message to sign format: timestamp + "\n" + nonce + "\n" + data
         """
-        message_str = f"{timestamp}\n{nonce}\n{data}"
-        message_bytes = message_str.encode("utf-8")
+        message_bytes = f"{timestamp}\n{nonce}\n{data}".encode("utf-8")
 
         if self._auth_method == "signature":
-            import hmac
-            import hashlib
-
             if not self.client_secret:
                 raise ValueError("Cannot generate signature without Client Secret")
-            sig = hmac.new(
+            return hmac.new(
                 self.client_secret.encode("utf-8"), message_bytes, hashlib.sha256
             ).hexdigest()
-            return sig
 
-        elif self._auth_method == "asymmetric":
-            if not self._private_key:
-                raise ValueError(
-                    "Cannot generate asymmetric signature without Private Key"
-                )
-            from cryptography.hazmat.primitives.asymmetric import (
-                ed25519,
-                rsa,
-                padding,
-                ec,
-            )
-            from cryptography.hazmat.primitives.serialization import (
-                load_pem_private_key,
-            )
-            from cryptography.hazmat.primitives import hashes
-
-            pkey = self._private_key
-            if isinstance(pkey, (str, bytes)):
-                if isinstance(pkey, str) and len(pkey) < 1024 and "\n" not in pkey:
-                    import os
-
-                    if os.path.exists(pkey):
-                        with open(pkey, "rb") as f:
-                            pkey_bytes = f.read()
-                    else:
-                        pkey_bytes = pkey.encode("utf-8")
-                else:
-                    pkey_bytes = (
-                        pkey if isinstance(pkey, bytes) else pkey.encode("utf-8")
-                    )
-
-                pkey = load_pem_private_key(pkey_bytes, password=None)
-
-            if isinstance(pkey, ed25519.Ed25519PrivateKey):
-                sig_bytes = pkey.sign(message_bytes)
-                return sig_bytes.hex()
-            elif isinstance(pkey, rsa.RSAPrivateKey):
-                sig_bytes = pkey.sign(
-                    message_bytes, padding.PKCS1v15(), hashes.SHA256()
-                )
-                return sig_bytes.hex()
-            else:
-                try:
-                    sig_bytes = pkey.sign(message_bytes, ec.ECDSA(hashes.SHA256()))
-                    return sig_bytes.hex()
-                except Exception:
-                    sig_bytes = pkey.sign(message_bytes)
-                    return sig_bytes.hex()
-        else:
+        if self._auth_method != "asymmetric":
             raise ValueError(
-                f"Signature generation not supported for auth_method '{self._auth_method}'"
+                "Signature generation not supported for auth_method "
+                f"'{self._auth_method}'"
             )
+
+        if not self._private_key:
+            raise ValueError("Cannot generate asymmetric signature without Private Key")
+
+        pkey = self._load_private_key()
+        if isinstance(pkey, ed25519.Ed25519PrivateKey):
+            return pkey.sign(message_bytes).hex()
+        if isinstance(pkey, rsa.RSAPrivateKey):
+            return pkey.sign(message_bytes, padding.PKCS1v15(), hashes.SHA256()).hex()
+        if isinstance(pkey, ec.EllipticCurvePrivateKey):
+            return pkey.sign(message_bytes, ec.ECDSA(hashes.SHA256())).hex()
+        raise ValueError(
+            f"Unsupported private key type for signing: {type(pkey).__name__}."
+        )
 
     def get_new_token(
         self, use_refresh_token_if_available: bool = True, expires_in: int = 0

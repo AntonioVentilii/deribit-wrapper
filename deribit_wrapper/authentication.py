@@ -222,14 +222,27 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
                 return self._request(uri, params, give_results=give_results)
         return {}
 
+    def _retry_budget(self) -> tuple[int, float]:
+        """Return the validated retry budget, rejecting misconfigured values."""
+        attempts = self.unavailable_max_attempts
+        wait = self.unavailable_wait_seconds
+        if not isinstance(attempts, int) or attempts < 1:
+            raise ValueError(
+                f"unavailable_max_attempts must be an integer >= 1, got {attempts!r}."
+            )
+        if not isinstance(wait, (int, float)) or wait < 0:
+            raise ValueError(
+                f"unavailable_wait_seconds must be a non-negative number, got {wait!r}."
+            )
+        return attempts, wait
+
     def _handle_temporarily_unavailable(
         self, uri: str, params: ParamsType, give_results: bool
     ) -> dict:
-        max_attempts = self.unavailable_max_attempts
-        wait = self.unavailable_wait_seconds
+        max_attempts, wait = self._retry_budget()
         for i in range(max_attempts):
             print(
-                f"Temporarily unavailable. Waiting {seconds_to_hms(wait)} "
+                f"Temporarily unavailable. Waiting {seconds_to_hms(int(wait))} "
                 f"[{i + 1}/{max_attempts}]..."
             )
             time.sleep(wait)

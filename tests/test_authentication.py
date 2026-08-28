@@ -248,3 +248,28 @@ def test_unavailable_defaults_are_bounded():
     auth = Authentication(env="test", client_id="id", client_secret="secret")
     worst_case = auth.unavailable_max_attempts * auth.unavailable_wait_seconds
     assert worst_case <= 600
+
+
+@pytest.mark.parametrize("bad", [0, -1, 2.5, "3", None])
+def test_retry_budget_rejects_bad_attempts(auth_instance, bad):
+    """Test that a misconfigured attempt count raises a clear error."""
+    auth_instance.unavailable_max_attempts = bad
+    with pytest.raises(ValueError, match="unavailable_max_attempts"):
+        auth_instance._retry_budget()
+
+
+@pytest.mark.parametrize("bad", [-1, "60", None])
+def test_retry_budget_rejects_bad_wait(auth_instance, bad):
+    """Test that a misconfigured wait raises a clear error."""
+    auth_instance.unavailable_wait_seconds = bad
+    with pytest.raises(ValueError, match="unavailable_wait_seconds"):
+        auth_instance._retry_budget()
+
+
+def test_retry_budget_accepts_float_wait(auth_instance):
+    """Test that a sub-second wait is allowed and formats without error."""
+    auth_instance.unavailable_wait_seconds = 0.5
+    assert auth_instance._retry_budget() == (
+        auth_instance.unavailable_max_attempts,
+        0.5,
+    )

@@ -385,3 +385,8 @@ def test_get_complete_market_book_covers_all_currencies(mocker, market_data):
     df = market_data.get_complete_market_book()
     assert [params["currency"] for _, params in calls] == ["BTC", "ETH"]
     assert len(df) == 2
+
+
+def test_get_market_book_both_args_raises(market_data):
+    with pytest.raises(ValueError, match="not both"):
+        market_data.get_market_book(currency="BTC", instrument="BTC-PERPETUAL")

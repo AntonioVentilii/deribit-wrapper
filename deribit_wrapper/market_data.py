@@ -107,6 +107,8 @@ class MarketData(Authentication):
     def get_market_book(
         self, currency: str | list[str] = None, instrument: str | list[str] = None
     ) -> pd.DataFrame:
+        if currency is not None and instrument is not None:
+            raise ValueError("Provide either 'currency' or 'instrument', not both.")
         if currency is not None:
             uri = self.__GET_BOOK_BY_CURRENCY_URI
             key = "currency"

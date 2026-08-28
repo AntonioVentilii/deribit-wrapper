@@ -59,3 +59,11 @@ def test_seconds_to_hms():
     assert seconds_to_hms(60) == "0h 01m 00s"
     assert seconds_to_hms(3661) == "1h 01m 01s"
     assert seconds_to_hms(7325) == "2h 02m 05s"
+
+
+def test_from_dt_to_ts_keeps_millisecond_precision():
+    assert from_dt_to_ts("2024-01-01 00:00:00.123") == 1704067200123
+
+
+def test_from_dt_to_ts_seconds_truncates_subseconds():
+    assert from_dt_to_ts("2024-01-01 00:00:00.999", milliseconds=False) == 1704067200

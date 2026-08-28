@@ -1,7 +1,60 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "pull-request-title-pattern": "chore(release): v${version}",
   "release-type": "python",
   "include-v-in-tag": true,
+  "changelog-sections": [
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "Performance Improvements"
+    },
+    {
+      "type": "deps",
+      "section": "Dependencies"
+    },
+    {
+      "type": "revert",
+      "section": "Reverts"
+    },
+    {
+      "type": "refactor",
+      "section": "Code Refactoring"
+    },
+    {
+      "type": "docs",
+      "section": "Documentation"
+    },
+    {
+      "type": "build",
+      "section": "Build System"
+    },
+    {
+      "type": "ci",
+      "section": "Continuous Integration"
+    },
+    {
+      "type": "test",
+      "section": "Tests"
+    },
+    {
+      "type": "style",
+      "section": "Styles"
+    },
+    {
+      "type": "chore",
+      "section": "Miscellaneous Chores"
+    }
+  ],
   "packages": {
     ".": {
       "package-name": "deribit_wrapper",

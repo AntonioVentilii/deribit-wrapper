@@ -388,6 +388,8 @@ class AccountManagement(MarketData):
         for q in queries:
             if q is not None:
                 params["query"] = q
+            else:
+                params.pop("query", None)
             for c in currency:
                 params["currency"] = c
                 params.pop("continuation", None)

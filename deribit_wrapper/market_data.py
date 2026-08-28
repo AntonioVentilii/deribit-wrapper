@@ -161,11 +161,27 @@ class MarketData(Authentication):
     @overload
     def get_instruments(
         self,
+        currencies: Optional[str | list[str]],
+        kind: Optional[str],
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_instruments(
+        self,
         currencies: Optional[str | list[str]] = ...,
         kind: Optional[str] = ...,
         *,
         as_list: Literal[True],
     ) -> list[str]: ...
+
+    @overload
+    def get_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        kind: Optional[str] = ...,
+        as_list: bool = ...,
+    ) -> pd.DataFrame | list[str]: ...
 
     def get_instruments(
         self,
@@ -247,10 +263,24 @@ class MarketData(Authentication):
     @overload
     def get_future_instruments(
         self,
+        currencies: Optional[str | list[str]],
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_future_instruments(
+        self,
         currencies: Optional[str | list[str]] = ...,
         *,
         as_list: Literal[True],
     ) -> list[str]: ...
+
+    @overload
+    def get_future_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        as_list: bool = ...,
+    ) -> pd.DataFrame | list[str]: ...
 
     def get_future_instruments(
         self, currencies: Optional[str | list[str]] = None, as_list: bool = False
@@ -272,10 +302,24 @@ class MarketData(Authentication):
     @overload
     def get_option_instruments(
         self,
+        currencies: Optional[str | list[str]],
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_option_instruments(
+        self,
         currencies: Optional[str | list[str]] = ...,
         *,
         as_list: Literal[True],
     ) -> list[str]: ...
+
+    @overload
+    def get_option_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        as_list: bool = ...,
+    ) -> pd.DataFrame | list[str]: ...
 
     def get_option_instruments(
         self, currencies: Optional[str | list[str]] = None, as_list: bool = False

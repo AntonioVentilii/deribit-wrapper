@@ -1,3 +1,5 @@
+"""Trading operations: orders, margins, cancellations, and trade history."""
+
 from __future__ import absolute_import, annotations
 
 import time
@@ -13,6 +15,8 @@ from .utilities import DEFAULT_END, DEFAULT_START, OrdersType
 
 
 class Trading(AccountManagement):
+    """Place, query, and cancel orders; simulated=True builds order results locally instead of submitting them."""
+
     __GET_TRADE_BY_ORDER = "/private/get_user_trades_by_order"
     __GET_ORDER_STATE = "/private/get_order_state"
     __GET_OPEN_ORDERS = "/private/get_open_orders"
@@ -33,6 +37,7 @@ class Trading(AccountManagement):
         progress_bar_desc: str = None,
         simulated: bool = True,
     ):
+        """Create a trading client; simulated=True disables live order placement."""
         super().__init__(
             client_id=client_id,
             client_secret=client_secret,
@@ -46,6 +51,7 @@ class Trading(AccountManagement):
     def instrument_margins(
         self, instrument: str, amount: float | int = 1, price: float = None
     ) -> dict:
+        """Return buy and sell margins for an instrument at a price."""
         if price is None:
             price = self.last_price(instrument)
         uri = self.__GET_MARGINS
@@ -56,6 +62,7 @@ class Trading(AccountManagement):
     def instrument_margin(
         self, instrument: str, amount: float | int = 1, price: float = None
     ) -> float:
+        """Return the buy margin for positive amounts and the sell margin otherwise."""
         side = "buy" if amount > 0 else "sell"
         return self.instrument_margins(instrument, amount=abs(amount), price=price)[
             side
@@ -64,14 +71,17 @@ class Trading(AccountManagement):
     def instrument_buy_margin(
         self, instrument: str, amount: float | int = 1, price: float = None
     ) -> float:
+        """Return the buy margin for an instrument."""
         return self.instrument_margins(instrument, amount=amount, price=price)["buy"]
 
     def instrument_sell_margin(
         self, instrument: str, amount: float | int = 1, price: float = None
     ) -> float:
+        """Return the sell margin for an instrument."""
         return self.instrument_margins(instrument, amount=amount, price=price)["sell"]
 
     def get_trade_by_order(self, order_ids: list[str | int]) -> pd.DataFrame:
+        """Return the trades belonging to the given order ids as a DataFrame."""
         uri = self.__GET_TRADE_BY_ORDER
         results = []
         prefix = (
@@ -86,6 +96,7 @@ class Trading(AccountManagement):
         return ret
 
     def get_orders(self, order_ids: list[str | int]) -> pd.DataFrame:
+        """Return the state of the given orders as a DataFrame."""
         uri = self.__GET_ORDER_STATE
         results = []
         prefix = (
@@ -98,12 +109,14 @@ class Trading(AccountManagement):
         return ret
 
     def get_open_orders(self) -> pd.DataFrame:
+        """Return all open orders as a DataFrame."""
         uri = self.__GET_OPEN_ORDERS
         r = self._request(uri, {})
         df = pd.DataFrame(r)
         return df
 
     def add_order_data(self, trades: pd.DataFrame) -> pd.DataFrame:
+        """Merge order details onto a trades DataFrame by order id."""
         order_ids = list(set(trades["order_id"]))
         orders = self.get_orders(order_ids)
         trades = trades.merge(
@@ -121,6 +134,7 @@ class Trading(AccountManagement):
         currency: str | list[str] = None,
         include_order_data: bool = False,
     ) -> pd.DataFrame:
+        """Return trades for a period, optionally enriched with order data."""
         start = start or DEFAULT_START
         end = end or DEFAULT_END
         results = self.get_transaction_log(start, end, currency, query="trade")
@@ -134,6 +148,7 @@ class Trading(AccountManagement):
     def get_entire_trade_history(
         self, include_order_data: bool = False
     ) -> pd.DataFrame:
+        """Return the full trade history of the account."""
         return self.get_trade_history(include_order_data=include_order_data)
 
     def _error_handler(
@@ -229,6 +244,7 @@ class Trading(AccountManagement):
         label: str = None,
         reduce_only: bool = False,
     ) -> dict:
+        """Place an order after a minimum-size check; placement errors are returned as {'error': ...}."""
         self.check_min_trade_amount([(asset, amount)])
         try:
             ret = self._order(
@@ -246,10 +262,12 @@ class Trading(AccountManagement):
         label: str = None,
         reduce_only: bool = False,
     ) -> dict:
+        """Place a market order for the given amount."""
         ret = self.order(asset, amount, label=label, reduce_only=reduce_only)
         return ret
 
     def bulk_order(self, orders: OrdersType, label: str = None) -> list[dict]:
+        """Place multiple market or limit orders sequentially."""
         self.check_min_trade_amount(orders)
         ret = []
         for order in orders:
@@ -262,6 +280,7 @@ class Trading(AccountManagement):
         return ret
 
     def close_position(self, asset: str, limit: float | int = None) -> dict:
+        """Close a position at market, or at a limit price if given."""
         uri = self.__CLOSE_POSITION
         params = {
             "instrument_name": asset,
@@ -295,6 +314,7 @@ class Trading(AccountManagement):
         order_type: str = None,
         label: str = None,
     ) -> dict:
+        """Cancel orders by label, or by currency, kind, and type."""
         if label is not None:
             return self._cancel_by_label(label, currency)
         uri = self.__CANCEL_ALL_BY_KIND_OR_TYPE

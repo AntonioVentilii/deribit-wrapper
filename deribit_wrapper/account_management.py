@@ -1,3 +1,5 @@
+"""Account management: summaries, API keys, subaccounts, positions, and logs."""
+
 from __future__ import absolute_import, annotations
 
 import time
@@ -30,6 +32,8 @@ from .utilities import (
 
 
 class AccountManagement(MarketData):
+    """Manage the Deribit account: summaries, API keys, subaccounts, and logs."""
+
     __GET_ACCOUNT_SUMMARY = "/private/get_account_summary"
     __LIST_API_KEYS = "/private/list_api_keys"
     __CREATE_API_KEY = "/private/create_api_key"
@@ -58,6 +62,7 @@ class AccountManagement(MarketData):
         auth_method: str = "credentials",
         progress_bar_desc: str = None,
     ):
+        """Create an account management client."""
         super().__init__(
             client_id=client_id,
             client_secret=client_secret,
@@ -70,6 +75,7 @@ class AccountManagement(MarketData):
     def get_account_summary(
         self, currency: str | list[str] = None, subaccount_id: int = None
     ) -> pd.DataFrame:
+        """Return the extended account summary per currency as a DataFrame."""
         uri = self.__GET_ACCOUNT_SUMMARY
         params = {"currency": "", "extended": True}
         if subaccount_id is not None:
@@ -93,6 +99,7 @@ class AccountManagement(MarketData):
     def get_margin_model(
         self, currency: str | list[str] = None, subaccount_id: int = None
     ) -> pd.DataFrame:
+        """Return the margin model configuration per currency."""
         df = self.get_account_summary(currency=currency, subaccount_id=subaccount_id)
         df = df[
             [
@@ -105,17 +112,20 @@ class AccountManagement(MarketData):
         return df
 
     def list_api_keys(self) -> pd.DataFrame:
+        """Return all API keys of the account as a DataFrame."""
         uri = self.__LIST_API_KEYS
         r = self._request(uri, {})
         df = pd.DataFrame(r)
         return df
 
     def get_api_key(self, api_key_id: str) -> dict:
+        """Return the API key with the given id; raises if no key matches."""
         keys = self.list_api_keys()
         key = keys[keys["id"] == api_key_id].to_dict(orient="records")
         return key[0]
 
     def create_api_key(self, max_scope: str, name: str = None) -> dict:
+        """Create an API key with the given maximum scope and optional name."""
         uri = self.__CREATE_API_KEY
         params = {"max_scope": max_scope}
         if name is not None:
@@ -124,6 +134,7 @@ class AccountManagement(MarketData):
         return r
 
     def edit_api_key(self, api_key_id: str, max_scope: str, name: str = None) -> dict:
+        """Edit an API key's maximum scope and optional name."""
         uri = self.__EDIT_API_KEY
         params = {"id": api_key_id, "max_scope": max_scope}
         if name is not None:
@@ -132,18 +143,21 @@ class AccountManagement(MarketData):
         return r
 
     def enable_api_key(self, api_key_id: str) -> dict:
+        """Enable the API key with the given id."""
         uri = self.__ENABLE_API_KEY
         params = {"id": api_key_id}
         r = self._request(uri, params)
         return r
 
     def disable_api_key(self, api_key_id: str) -> dict:
+        """Disable the API key with the given id."""
         uri = self.__DISABLE_API_KEY
         params = {"id": api_key_id}
         r = self._request(uri, params)
         return r
 
     def remove_api_key(self, api_key_id: str) -> dict:
+        """Remove the API key with the given id."""
         uri = self.__REMOVE_API_KEY
         params = {"id": api_key_id}
         r = self._request(uri, params)
@@ -156,15 +170,18 @@ class AccountManagement(MarketData):
         return r
 
     def get_subaccounts(self) -> pd.DataFrame:
+        """Return all subaccounts as a DataFrame."""
         r = self._get_subaccounts()
         df = pd.DataFrame(r)
         return df
 
     def get_subaccounts_with_portfolio(self) -> list[dict]:
+        """Return all subaccounts including their portfolios."""
         r = self._get_subaccounts(with_portfolio=True)
         return r
 
     def get_subaccount(self, subaccount_id: int, with_portfolio: bool = False) -> dict:
+        """Return the subaccount with the given id, raising if not found."""
         r = self._get_subaccounts(with_portfolio=with_portfolio)
         for subaccount in r:
             if subaccount["id"] == subaccount_id:
@@ -172,11 +189,13 @@ class AccountManagement(MarketData):
         raise ValueError(f"Subaccount {subaccount_id} not found.")
 
     def create_subaccount(self) -> dict:
+        """Create a new subaccount."""
         uri = self.__CREATE_SUBACCOUNT
         r = self._request(uri, {})
         return r
 
     def change_subaccount_name(self, subaccount_id: int, name: str) -> dict:
+        """Rename a subaccount, mapping API errors to typed exceptions."""
         if len(name) > 32:
             raise ValueError(
                 f"Subaccount name '{name}' is too long, maximum 32 characters."
@@ -206,6 +225,7 @@ class AccountManagement(MarketData):
     def remove_subaccount(
         self, subaccount_id: int, wait_if_over_limit: bool = False
     ) -> dict:
+        """Remove a subaccount, optionally waiting out the rate limit."""
         uri = self.__REMOVE_SUBACCOUNT
         params = {"subaccount_id": subaccount_id}
         r = self._request(uri, params)
@@ -285,6 +305,7 @@ class AccountManagement(MarketData):
     def change_margin_model(
         self, margin_model: MarginModelType, subaccount_id: int = None
     ) -> pd.DataFrame:
+        """Change the margin model, optionally for one subaccount."""
         return self._change_margin_model(
             margin_model, subaccount_id=subaccount_id, dry_run=False
         )
@@ -292,6 +313,7 @@ class AccountManagement(MarketData):
     def check_if_margin_model_change_is_possible(
         self, margin_model: MarginModelType, subaccount_id: int = None
     ) -> bool:
+        """Return True if a margin model change would keep margin rates below 1."""
         df = self._change_margin_model(
             margin_model, subaccount_id=subaccount_id, dry_run=True
         )
@@ -308,6 +330,7 @@ class AccountManagement(MarketData):
         kind: str = None,
         subaccount_id: int = None,
     ) -> pd.DataFrame:
+        """Return open positions per currency as a DataFrame."""
         uri = self.__GET_POSITIONS
         params = {"currency": ""}
         if kind is not None:
@@ -332,6 +355,7 @@ class AccountManagement(MarketData):
         currency: str | list[str] = None,
         query: str | list[str] = None,
     ) -> pd.DataFrame:
+        """Return the paginated transaction log for a period as a DataFrame."""
         start = start or DEFAULT_START
         end = end or DEFAULT_END
         uri = self.__GET_TRANSACTION_LOG
@@ -370,6 +394,7 @@ class AccountManagement(MarketData):
         end: str | datetime = None,
         currency: str | list[str] = None,
     ) -> pd.DataFrame:
+        """Return delivery entries of the transaction log."""
         start = start or DEFAULT_START
         end = end or DEFAULT_END
         return self.get_transaction_log(start, end, currency, query="delivery")
@@ -380,6 +405,7 @@ class AccountManagement(MarketData):
         end: str | datetime = None,
         currency: str | list[str] = None,
     ) -> pd.DataFrame:
+        """Return deposit and transfer entries of the transaction log."""
         start = start or DEFAULT_START
         end = end or DEFAULT_END
         return self.get_transaction_log(
@@ -389,6 +415,7 @@ class AccountManagement(MarketData):
     def get_portfolio_margins(
         self, orders: list[MarketOrderType], add_positions: bool = True
     ) -> dict:
+        """Return portfolio margins for simulated positions, grouped by currency."""
         uri = self.__GET_PORTFOLIO_MARGINS
         data = {}
         for instrument, amount in orders:

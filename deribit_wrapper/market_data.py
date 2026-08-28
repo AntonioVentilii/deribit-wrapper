@@ -119,12 +119,13 @@ class MarketData(Authentication):
             values = [instrument] if isinstance(instrument, str) else instrument
         else:
             raise ValueError("Either 'currency' or 'instrument' must be provided.")
-        ret = pd.DataFrame()
+        frames = []
         for value in values:
             r = self._request(uri, {key: value})
             df_temp = pd.DataFrame(r)
             df_temp.dropna(axis=1, how="all", inplace=True)
-            ret = pd.concat([ret, df_temp], ignore_index=True)
+            frames.append(df_temp)
+        ret = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         return ret
 
     def get_instruments(

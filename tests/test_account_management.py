@@ -312,3 +312,9 @@ def test_get_api_key_empty_list_raises_value_error(mocker, account):
     mocker.patch.object(account, "list_api_keys", return_value=pd.DataFrame())
     with pytest.raises(ValueError, match="not found"):
         account.get_api_key(1)
+
+
+def test_get_api_key_accepts_string_id_for_integer_key(mocker, account):
+    keys = pd.DataFrame([{"id": 1, "name": "key1"}, {"id": 2, "name": "key2"}])
+    mocker.patch.object(account, "list_api_keys", return_value=keys)
+    assert account.get_api_key("2") == {"id": 2, "name": "key2"}

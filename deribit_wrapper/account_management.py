@@ -118,14 +118,12 @@ class AccountManagement(MarketData):
         df = pd.DataFrame(r)
         return df
 
-    def get_api_key(self, api_key_id: str) -> dict:
+    def get_api_key(self, api_key_id: int | str) -> dict:
         """Return the API key with the given id; raises if no key matches."""
         keys = self.list_api_keys()
-        matches = (
-            keys[keys["id"] == api_key_id].to_dict(orient="records")
-            if not keys.empty
-            else []
-        )
+        records = keys.to_dict(orient="records") if not keys.empty else []
+        # the API reports ids as integers, but accept the string form too
+        matches = [r for r in records if str(r.get("id")) == str(api_key_id)]
         if not matches:
             raise ValueError(f"API key {api_key_id} not found.")
         return matches[0]
@@ -139,7 +137,9 @@ class AccountManagement(MarketData):
         r = self._request(uri, params)
         return r
 
-    def edit_api_key(self, api_key_id: str, max_scope: str, name: str = None) -> dict:
+    def edit_api_key(
+        self, api_key_id: int | str, max_scope: str, name: str = None
+    ) -> dict:
         """Edit an API key's maximum scope and optional name."""
         uri = self.__EDIT_API_KEY
         params = {"id": api_key_id, "max_scope": max_scope}
@@ -148,21 +148,21 @@ class AccountManagement(MarketData):
         r = self._request(uri, params)
         return r
 
-    def enable_api_key(self, api_key_id: str) -> dict:
+    def enable_api_key(self, api_key_id: int | str) -> dict:
         """Enable the API key with the given id."""
         uri = self.__ENABLE_API_KEY
         params = {"id": api_key_id}
         r = self._request(uri, params)
         return r
 
-    def disable_api_key(self, api_key_id: str) -> dict:
+    def disable_api_key(self, api_key_id: int | str) -> dict:
         """Disable the API key with the given id."""
         uri = self.__DISABLE_API_KEY
         params = {"id": api_key_id}
         r = self._request(uri, params)
         return r
 
-    def remove_api_key(self, api_key_id: str) -> dict:
+    def remove_api_key(self, api_key_id: int | str) -> dict:
         """Remove the API key with the given id."""
         uri = self.__REMOVE_API_KEY
         params = {"id": api_key_id}

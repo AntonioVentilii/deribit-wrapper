@@ -206,7 +206,12 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
                 print(
                     f"Invalid token. Trying to get a new one. Attempt {i + 1} of {max_attempts}..."
                 )
-                self.get_new_token()
+                try:
+                    self.get_new_token()
+                except (RequestError, KeyError):
+                    # get_new_token raises KeyError when the auth endpoint
+                    # returns an error payload instead of a token
+                    continue
                 return self._request(uri, params, give_results=give_results)
         return {}
 

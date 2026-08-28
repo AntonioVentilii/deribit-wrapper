@@ -1,3 +1,5 @@
+import locale
+
 import pandas as pd
 import pytest
 
@@ -8,6 +10,15 @@ from deribit_wrapper.market_data import (
     name_instrument,
     name_option,
 )
+
+
+@pytest.fixture(autouse=True)
+def _force_c_time_locale():
+    """Pin LC_TIME to the C locale so %b renders English month abbreviations."""
+    previous = locale.setlocale(locale.LC_TIME)
+    locale.setlocale(locale.LC_TIME, "C")
+    yield
+    locale.setlocale(locale.LC_TIME, previous)
 
 
 @pytest.fixture

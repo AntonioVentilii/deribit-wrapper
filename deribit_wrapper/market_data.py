@@ -1,3 +1,5 @@
+"""Market data access: instruments, tickers, order books, and price history."""
+
 from __future__ import absolute_import, annotations
 
 import logging
@@ -24,6 +26,7 @@ from .utilities import (
 def name_instrument(
     currency: str, expiry: DatetimeType, strike: StrikeType = None, opt_type: str = None
 ) -> str:
+    """Build a Deribit instrument name from currency, expiry, and optional strike/type."""
     c = currency
     t = pd.to_datetime(expiry).strftime("%e%b%y").strip()
     if strike is None or opt_type is None:
@@ -42,16 +45,20 @@ def name_instrument(
 def name_option(
     currency: str, expiry: DatetimeType, strike: StrikeType, opt_type: str
 ) -> str:
+    """Build a Deribit option name, e.g. 'BTC-29MAR24-50000-C'."""
     name = name_instrument(currency, expiry, strike, opt_type)
     return name
 
 
 def name_future(currency: str, expiry: DatetimeType) -> str:
+    """Build a Deribit future name, e.g. 'BTC-29MAR24'."""
     name = name_instrument(currency, expiry)
     return name
 
 
 class MarketData(Authentication):
+    """Expose Deribit market data: instruments, tickers, books, and history."""
+
     __GET_CONTRACT_SIZE_URI = "/public/get_contract_size"
     __GET_CURRENCY_URI = "/public/get_currencies"
     __GET_TICKER_URI = "/public/ticker"
@@ -70,6 +77,7 @@ class MarketData(Authentication):
         auth_method: str = "credentials",
         progress_bar_desc: str = None,
     ):
+        """Create a market data client, optionally labelling its progress bars."""
         super().__init__(
             env=env,
             client_id=client_id,
@@ -80,6 +88,7 @@ class MarketData(Authentication):
         self.progress_bar_desc = progress_bar_desc
 
     def get_contract_size(self, asset: str):
+        """Return the contract size for an instrument, or {} if unavailable."""
         uri = self.__GET_CONTRACT_SIZE_URI
         params = {"instrument_name": asset}
         r = self._request(uri, params)
@@ -91,17 +100,20 @@ class MarketData(Authentication):
         return ret
 
     def get_currencies(self) -> list[dict]:
+        """Return the raw list of currencies supported by the exchange."""
         ret = self._request(self.__GET_CURRENCY_URI, {})
         return ret
 
     @property
     def currencies(self) -> list[str]:
+        """Return the sorted list of supported currency codes."""
         df = pd.DataFrame(self.get_currencies())
         currency_list = list(df["currency"])
         sorted_currency_list = sorted(currency_list)
         return sorted_currency_list
 
     def get_complete_market_book(self) -> pd.DataFrame:
+        """Return the book summary for every supported currency."""
         uri = self.__GET_BOOK_BY_CURRENCY_URI
         params = {"currency": ""}
         currencies = self.currencies
@@ -117,6 +129,7 @@ class MarketData(Authentication):
     def get_market_book(
         self, currency: str = None, instrument: list[str] = None
     ) -> pd.DataFrame:
+        """Return the book summary for the given currencies or instruments."""
         ret = None
         if currency is not None:
             pass
@@ -140,6 +153,7 @@ class MarketData(Authentication):
         kind: str = None,
         as_list: bool = False,
     ) -> pd.DataFrame | list[str]:
+        """Return active and expired instruments, deduplicated and sorted."""
         uri = self.__GET_INSTRUMENTS_URI
         params = {"currency": "", "expired": False}
         if kind is not None:
@@ -167,6 +181,7 @@ class MarketData(Authentication):
         return ret
 
     def get_instrument(self, instrument: str) -> dict:
+        """Return the full instrument definition for the given name."""
         uri = self.__GET_INSTRUMENT_URI
         params = {"instrument_name": instrument}
         r = self._request(uri, params)
@@ -174,26 +189,31 @@ class MarketData(Authentication):
         return ret
 
     def get_base_currency(self, instrument: str) -> str:
+        """Return the base currency of an instrument."""
         r = self.get_instrument(instrument)
         ret = r["base_currency"]
         return ret
 
     def get_min_trade_amount(self, instrument: str) -> float:
+        """Return the minimum trade amount of an instrument."""
         r = self.get_instrument(instrument)
         ret = r["min_trade_amount"]
         return ret
 
     def get_kind(self, instrument: str) -> str:
+        """Return the kind of an instrument, e.g. 'future' or 'option'."""
         r = self.get_instrument(instrument)
         ret = r["kind"]
         return ret
 
     def get_expiry_timestamp(self, instrument: str) -> int:
+        """Return an instrument's expiry as an epoch timestamp in milliseconds."""
         r = self.get_instrument(instrument)
         ret = r["expiration_timestamp"]
         return ret
 
     def get_expiry_date(self, instrument: str) -> datetime:
+        """Return an instrument's expiry as a datetime."""
         ts = self.get_expiry_timestamp(instrument)
         ret = from_ts_to_dt(ts)
         return ret
@@ -201,16 +221,19 @@ class MarketData(Authentication):
     def get_future_instruments(
         self, currencies: str | list[str] = None, as_list: bool = False
     ) -> pd.DataFrame | list[str]:
+        """Return future instruments for the given currencies."""
         df = self.get_instruments(currencies=currencies, kind="future", as_list=as_list)
         return df
 
     def get_option_instruments(
         self, currencies: str | list[str] = None, as_list: bool = False
     ) -> pd.DataFrame | list[str]:
+        """Return option instruments for the given currencies."""
         df = self.get_instruments(currencies=currencies, kind="option", as_list=as_list)
         return df
 
     def get_nth_future(self, currency: str, n: int, ref_date: datetime = None) -> str:
+        """Return the nth future by expiry after a margin past the reference date."""
         ref_date = ref_date or pd.Timestamp.now()
         margin = ref_date + pd.DateOffset(days=1, hours=1)
         futures = self.get_future_instruments(currencies=currency)
@@ -227,9 +250,11 @@ class MarketData(Authentication):
         return ret
 
     def get_first_future(self, currency: str, ref_date: datetime = None) -> str:
+        """Return the nearest future for a currency."""
         return self.get_nth_future(currency, n=1, ref_date=ref_date)
 
     def get_closest_strike_by_future(self, future: str) -> float:
+        """Return the option strike closest to the future's last price."""
         last_price = self.last_price(future)
         instrument = self.get_instrument(future)
         currency = instrument["base_currency"]
@@ -242,11 +267,13 @@ class MarketData(Authentication):
         return ret
 
     def get_closest_strike(self, currency: str, expiry: DatetimeType) -> float:
+        """Return the closest option strike for a currency and expiry."""
         future = name_future(currency, expiry)
         ret = self.get_closest_strike_by_future(future)
         return ret
 
     def min_trade_amount(self, instruments: str | list[str] = None) -> pd.DataFrame:
+        """Return minimum trade amounts indexed by instrument name."""
         df = self.get_instruments()
         df.set_index("instrument_name", inplace=True)
         if instruments is not None:
@@ -254,18 +281,21 @@ class MarketData(Authentication):
         return df["min_trade_amount"]
 
     def check_min_trade_amount(self, orders: OrdersType) -> pd.DataFrame:
+        """Return True if every order size meets its instrument's minimum."""
         instruments = [t[0] for t in orders]
         size = [abs(t[1]) for t in orders]
         ret = size >= self.min_trade_amount(instruments)
         return ret.all()
 
     def get_ticker(self, asset: str) -> dict:
+        """Return the ticker for an instrument."""
         uri = self.__GET_TICKER_URI
         params = {"instrument_name": asset}
         ret = self._request(uri, params)
         return ret
 
     def last_price(self, asset: str) -> float:
+        """Return the last traded price, falling back to the mark price."""
         ticker = self.get_ticker(asset)
         ret = ticker.get("last_price")
         if ret is None:
@@ -278,6 +308,7 @@ class MarketData(Authentication):
         return ret
 
     def mid_price(self, asset: str) -> float:
+        """Return the bid/ask mid price, falling back to one side or the mark price."""
         ticker = self.get_ticker(asset)
         bid = ticker["best_bid_price"]
         ask = ticker["best_ask_price"]
@@ -304,6 +335,7 @@ class MarketData(Authentication):
         end_date: str | datetime = None,
         resolution: str = "1D",
     ) -> pd.DataFrame:
+        """Return OHLC chart history for an instrument as a DataFrame."""
         start_date = start_date or DEFAULT_START
         end_date = end_date or DEFAULT_END
         uri = self.__GET_MARKET_DATA_HISTORY
@@ -332,6 +364,7 @@ class MarketData(Authentication):
         start_date: str | datetime = None,
         end_date: str | datetime = None,
     ) -> pd.DataFrame:
+        """Return concatenated price history for multiple instruments."""
         start_date = start_date or DEFAULT_START
         end_date = end_date or DEFAULT_END
         if assets is None:

@@ -15,6 +15,46 @@ on:
     types: [ created ]
 
 jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    env:
+      TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      # The repository squash-merges, so the PR title becomes the commit
+      # message release-please reads. A type it does not recognise is silently
+      # dropped: no release, and no changelog entry, even for a bug fix. The
+      # types below are exactly the changelog-sections in
+      # release-please-config.json, so the two cannot drift apart.
+      #
+      # This job runs on every event rather than being skipped outside pull
+      # requests, because may-merge treats a skipped dependency as a failure.
+      - name: Check PR title
+        run: |
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+              echo "Not a pull request, nothing to check."
+              exit 0
+          fi
+          TYPES='feat|fix|perf|deps|revert|refactor|docs|build|ci|test|style|chore'
+          PATTERN="^($TYPES)(\([-a-zA-Z0-9,]+\))?!?: .+"
+          if [[ "$TITLE" =~ $PATTERN ]]; then
+              echo "PR title passes."
+          else
+              echo "PR title does not follow conventional commits:"
+              echo ""
+              echo "    $TITLE"
+              echo ""
+              echo "Expected:  type: description"
+              echo "  or:      type(scope): description"
+              echo "  or:      type(scope)!: description   (breaking change)"
+              echo ""
+              echo "Allowed types: ${TYPES//|/, }"
+              echo ""
+              echo "The title becomes the squashed commit message, and"
+              echo "release-please ignores any type it does not recognise -"
+              echo "so an unlisted type ships with no release and no changelog."
+              exit 1
+          fi
+
   format:
     runs-on: ubuntu-latest
     strategy:
@@ -108,7 +148,7 @@ jobs:
           make docs
 
   may-merge:
-    needs: [ 'format', 'lint', 'typecheck', 'test', 'docs' ]
+    needs: [ 'check-pr-title', 'format', 'lint', 'typecheck', 'test', 'docs' ]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:

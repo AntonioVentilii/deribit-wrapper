@@ -284,6 +284,18 @@ def test_cancel_by_label_simulated_does_not_call_api(mocker, trading):
     assert ret["label"] == "my-label"
 
 
+def test_simulated_trading_never_touches_private_endpoints(mocker, trading):
+    """Simulated calls may read public data, but must never hit /private."""
+    calls = record_requests(
+        mocker, trading, response=lambda uri, params: [{"currency": "BTC"}]
+    )
+    trading.cancel_orders()
+    trading.cancel_orders(label="x")
+    trading.close_position("BTC-PERPETUAL")
+    private = [uri for uri, _ in calls if uri.startswith("/private")]
+    assert private == []
+
+
 def test_cancel_orders_simulated_no_currency_uses_account_currencies(mocker, trading):
     calls = record_requests(mocker, trading)
     mocker.patch.object(

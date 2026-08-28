@@ -339,6 +339,9 @@ class Trading(AccountManagement):
             return self._cancel_by_label(label, currency)
         if self.simulated:
             simulated = {"info": SIMULATION_INFO, "kind": kind, "type": order_type}
+            # resolving currency=None reads the public currency list, exactly as
+            # live mode does, so the simulated result keeps the same keys; no
+            # private endpoint is touched
             currencies = self.currencies if currency is None else currency
             if not isinstance(currencies, list):
                 currencies = [currencies]

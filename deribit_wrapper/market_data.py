@@ -102,36 +102,27 @@ class MarketData(Authentication):
         return sorted_currency_list
 
     def get_complete_market_book(self) -> pd.DataFrame:
-        uri = self.__GET_BOOK_BY_CURRENCY_URI
-        params = {"currency": ""}
-        currencies = self.currencies
+        return self.get_market_book(currency=self.currencies)
+
+    def get_market_book(
+        self, currency: str | list[str] = None, instrument: str | list[str] = None
+    ) -> pd.DataFrame:
+        if currency is not None:
+            uri = self.__GET_BOOK_BY_CURRENCY_URI
+            key = "currency"
+            values = [currency] if isinstance(currency, str) else currency
+        elif instrument is not None:
+            uri = self.__GET_BOOK_BY_INSTRUMENT_URI
+            key = "instrument_name"
+            values = [instrument] if isinstance(instrument, str) else instrument
+        else:
+            raise ValueError("Either 'currency' or 'instrument' must be provided.")
         ret = pd.DataFrame()
-        for currency in currencies:
-            params["currency"] = currency
-            r = self._request(uri, params)
+        for value in values:
+            r = self._request(uri, {key: value})
             df_temp = pd.DataFrame(r)
             df_temp.dropna(axis=1, how="all", inplace=True)
             ret = pd.concat([ret, df_temp], ignore_index=True)
-        return ret
-
-    def get_market_book(
-        self, currency: str = None, instrument: list[str] = None
-    ) -> pd.DataFrame:
-        ret = None
-        if currency is not None:
-            pass
-        elif instrument is not None:
-            uri = self.__GET_BOOK_BY_INSTRUMENT_URI
-            params = {"instrument_name": ""}
-            ret = pd.DataFrame()
-            for i in instrument:
-                params["instrument_name"] = i
-                r = self._request(uri, params)
-                df_temp = pd.DataFrame(r)
-                df_temp.dropna(axis=1, how="all", inplace=True)
-                ret = pd.concat([ret, df_temp], ignore_index=True)
-        else:
-            pass
         return ret
 
     def get_instruments(

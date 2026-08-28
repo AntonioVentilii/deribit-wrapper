@@ -5,7 +5,7 @@ from __future__ import absolute_import, annotations
 import logging
 from datetime import datetime
 
-from typing import Optional, Any
+from typing import Any, Literal, Optional, overload
 
 import pandas as pd
 from progressbar import progressbar
@@ -150,6 +150,39 @@ class MarketData(Authentication):
         ret = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         return ret
 
+    @overload
+    def get_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        kind: Optional[str] = ...,
+        as_list: Literal[False] = ...,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def get_instruments(
+        self,
+        currencies: Optional[str | list[str]],
+        kind: Optional[str],
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        kind: Optional[str] = ...,
+        *,
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        kind: Optional[str] = ...,
+        as_list: bool = ...,
+    ) -> pd.DataFrame | list[str]: ...
+
     def get_instruments(
         self,
         currencies: Optional[str | list[str]] = None,
@@ -179,7 +212,7 @@ class MarketData(Authentication):
                 by=["kind", "base_currency", "expiration_timestamp"], inplace=True
             )
         if as_list:
-            ret = ret["instrument_name"].to_list() if not ret.empty else []
+            return ret["instrument_name"].to_list() if not ret.empty else []
         return ret
 
     def get_instrument(self, instrument: str) -> dict:
@@ -220,23 +253,87 @@ class MarketData(Authentication):
         ret = from_ts_to_dt(ts)
         return ret
 
+    @overload
+    def get_future_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        as_list: Literal[False] = ...,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def get_future_instruments(
+        self,
+        currencies: Optional[str | list[str]],
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_future_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        *,
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_future_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        as_list: bool = ...,
+    ) -> pd.DataFrame | list[str]: ...
+
     def get_future_instruments(
         self, currencies: Optional[str | list[str]] = None, as_list: bool = False
     ) -> pd.DataFrame | list[str]:
         """Return future instruments for the given currencies."""
-        df = self.get_instruments(currencies=currencies, kind="future", as_list=as_list)
-        return df
+        if as_list:
+            return self.get_instruments(
+                currencies=currencies, kind="future", as_list=True
+            )
+        return self.get_instruments(currencies=currencies, kind="future")
+
+    @overload
+    def get_option_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        as_list: Literal[False] = ...,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def get_option_instruments(
+        self,
+        currencies: Optional[str | list[str]],
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_option_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        *,
+        as_list: Literal[True],
+    ) -> list[str]: ...
+
+    @overload
+    def get_option_instruments(
+        self,
+        currencies: Optional[str | list[str]] = ...,
+        as_list: bool = ...,
+    ) -> pd.DataFrame | list[str]: ...
 
     def get_option_instruments(
         self, currencies: Optional[str | list[str]] = None, as_list: bool = False
     ) -> pd.DataFrame | list[str]:
         """Return option instruments for the given currencies."""
-        df = self.get_instruments(currencies=currencies, kind="option", as_list=as_list)
-        return df
+        if as_list:
+            return self.get_instruments(
+                currencies=currencies, kind="option", as_list=True
+            )
+        return self.get_instruments(currencies=currencies, kind="option")
 
     def get_nth_future(
         self, currency: str, n: int, ref_date: Optional[datetime] = None
-    ) -> str:
+    ) -> str | None:
         """Return the nth future by expiry after a margin past the reference date."""
         ref_date = ref_date or pd.Timestamp.now()
         margin = ref_date + pd.DateOffset(days=1, hours=1)
@@ -255,7 +352,7 @@ class MarketData(Authentication):
 
     def get_first_future(
         self, currency: str, ref_date: Optional[datetime] = None
-    ) -> str:
+    ) -> str | None:
         """Return the nearest future for a currency."""
         return self.get_nth_future(currency, n=1, ref_date=ref_date)
 
@@ -285,7 +382,10 @@ class MarketData(Authentication):
         df = self.get_instruments()
         df.set_index("instrument_name", inplace=True)
         if instruments is not None:
-            df = df.loc[instruments, :]
+            wanted = (
+                [instruments] if isinstance(instruments, str) else list(instruments)
+            )
+            df = df.loc[wanted, :]
         return df["min_trade_amount"]
 
     def check_min_trade_amount(self, orders: OrdersType) -> bool:
@@ -293,7 +393,7 @@ class MarketData(Authentication):
         instruments = [t[0] for t in orders]
         size = [abs(t[1]) for t in orders]
         ret = size >= self.min_trade_amount(instruments)
-        return ret.all()
+        return bool(ret.all())
 
     def get_ticker(self, asset: str) -> dict:
         """Return the ticker for an instrument."""

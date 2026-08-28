@@ -40,31 +40,6 @@ deribit_wrapper = ["py.typed"]
 [tool.mypy]
 files = ["deribit_wrapper"]
 # The package ships py.typed, so annotations are part of the public contract and
-# CI must keep them honest. These codes are the residue of adopting mypy on an
-# existing codebase - mostly the pandas DataFrame surface - and are meant to be
-# removed one at a time, the way the pydocstyle D1xx ignores were.
+# CI must keep them honest. No error codes are suppressed anywhere: the whole
+# package is type-checked strictly.
 
-# Suppressions are scoped per module so the rest of the package stays strict.
-# What remains is the pandas DataFrame surface; authentication needed an entry
-# for cryptography's private-key union until #107 centralised key loading, and
-# is now checked strictly.
-[[tool.mypy.overrides]]
-module = "deribit_wrapper.market_data"
-disable_error_code = [
-    "arg-type",
-    "assignment",
-    "call-overload",
-    "index",
-    "operator",
-    "return-value",
-    "union-attr",
-]
-
-[[tool.mypy.overrides]]
-module = "deribit_wrapper.account_management"
-disable_error_code = ["assignment", "list-item", "return-value", "var-annotated"]
-
-
-[[tool.mypy.overrides]]
-module = "deribit_wrapper.trading"
-disable_error_code = ["assignment"]

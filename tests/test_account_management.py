@@ -318,3 +318,15 @@ def test_get_api_key_accepts_string_id_for_integer_key(mocker, account):
     keys = pd.DataFrame([{"id": 1, "name": "key1"}, {"id": 2, "name": "key2"}])
     mocker.patch.object(account, "list_api_keys", return_value=keys)
     assert account.get_api_key("2") == {"id": 2, "name": "key2"}
+
+
+def test_transaction_log_none_query_does_not_reuse_previous_filter(mocker, account):
+    calls = record_requests(
+        mocker, account, response={"logs": [], "continuation": None}
+    )
+    account.get_transaction_log(
+        start="2024-01-01", end="2024-01-31", currency="BTC", query=["trade", None]
+    )
+    # the second pass must not inherit query=trade from the first
+    assert calls[0][1]["query"] == "trade"
+    assert "query" not in calls[1][1]

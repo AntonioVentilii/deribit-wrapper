@@ -10,9 +10,9 @@ lint:
 	pylint deribit_wrapper
 
 test:
-	pytest
+	pytest --cov=deribit_wrapper --cov-report=term-missing
 
 docs:
-	pydocstyle
+	pydocstyle deribit_wrapper
 
 all: lint check-format test docs

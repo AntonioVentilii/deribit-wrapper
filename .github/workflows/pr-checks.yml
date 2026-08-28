@@ -1,0 +1,54 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions: {}
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      # These types must stay in sync with changelog-sections in
+      # release-please-config.json: release-please silently ignores any other.
+      - name: Validate conventional commit PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          types='feat|fix|perf|deps|revert|refactor|docs|build|ci|test|style|chore'
+          pattern="^($types)(\([-a-zA-Z0-9,._/]+\))?!?: .+$"
+
+          if [[ "$PR_TITLE" =~ $pattern ]]; then
+            echo "PR title OK."
+            exit 0
+          fi
+
+          # Keep the title off the start of a line so it cannot inject a
+          # ::workflow:: command.
+          echo "::error::PR title must be a Conventional Commit: 'type: description', 'type(scope): description', or 'type(scope)!: description' for a breaking change."
+          echo "::error::Allowed types: ${types//|/, }"
+          echo "::error::The title becomes the squashed commit message; release-please ignores unknown types, so the change would ship with no release and no changelog entry."
+          echo "Got title: $PR_TITLE"
+          exit 1
+
+  pr-checks-pass:
+    needs: [ 'pr-title' ]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Fail if any required check did not succeed
+        uses: ./.github/actions/needs_success
+        with:
+          needs: '${{ toJson(needs) }}'

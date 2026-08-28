@@ -107,12 +107,18 @@ jobs:
         run: |
           make docs
 
-  may-merge:
+  checks-pass:
     needs: [ 'format', 'lint', 'typecheck', 'test', 'docs' ]
     if: ${{ always() }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/needs_success
+        with:
+          persist-credentials: false
+
+      - name: Fail if any required check did not succeed
+        uses: ./.github/actions/needs_success
         with:
           needs: '${{ toJson(needs) }}'

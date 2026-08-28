@@ -297,3 +297,96 @@ def test_get_market_data_history_no_data(mocker, market_data):
     )
     df = market_data.get_market_data_history("BTC-PERPETUAL")
     assert df.empty
+
+
+def test_get_market_book_by_currency(mocker, market_data):
+    calls = make_request_mock(
+        mocker,
+        market_data,
+        {
+            "/public/get_book_summary_by_currency": [
+                {"instrument_name": "BTC-PERPETUAL", "mark_price": 42000.0}
+            ]
+        },
+    )
+    df = market_data.get_market_book(currency="BTC")
+    assert calls == [("/public/get_book_summary_by_currency", {"currency": "BTC"})]
+    assert list(df["instrument_name"]) == ["BTC-PERPETUAL"]
+
+
+def test_get_market_book_by_currency_list(mocker, market_data):
+    calls = make_request_mock(
+        mocker,
+        market_data,
+        {
+            "/public/get_book_summary_by_currency": lambda params: [
+                {"instrument_name": f"{params['currency']}-PERPETUAL"}
+            ]
+        },
+    )
+    df = market_data.get_market_book(currency=["BTC", "ETH"])
+    assert [params["currency"] for _, params in calls] == ["BTC", "ETH"]
+    assert list(df["instrument_name"]) == ["BTC-PERPETUAL", "ETH-PERPETUAL"]
+
+
+def test_get_market_book_by_instrument(mocker, market_data):
+    calls = make_request_mock(
+        mocker,
+        market_data,
+        {
+            "/public/get_book_summary_by_instrument": lambda params: [
+                {"instrument_name": params["instrument_name"]}
+            ]
+        },
+    )
+    df = market_data.get_market_book(instrument=["BTC-PERPETUAL", "ETH-PERPETUAL"])
+    assert [params["instrument_name"] for _, params in calls] == [
+        "BTC-PERPETUAL",
+        "ETH-PERPETUAL",
+    ]
+    assert list(df["instrument_name"]) == ["BTC-PERPETUAL", "ETH-PERPETUAL"]
+
+
+def test_get_market_book_single_instrument_string(mocker, market_data):
+    make_request_mock(
+        mocker,
+        market_data,
+        {
+            "/public/get_book_summary_by_instrument": [
+                {"instrument_name": "BTC-PERPETUAL"}
+            ]
+        },
+    )
+    df = market_data.get_market_book(instrument="BTC-PERPETUAL")
+    assert list(df["instrument_name"]) == ["BTC-PERPETUAL"]
+
+
+def test_get_market_book_without_args_raises(market_data):
+    with pytest.raises(ValueError, match="Either 'currency' or 'instrument'"):
+        market_data.get_market_book()
+
+
+def test_get_complete_market_book_covers_all_currencies(mocker, market_data):
+    mocker.patch.object(
+        type(market_data),
+        "currencies",
+        new_callable=mocker.PropertyMock,
+        return_value=["BTC", "ETH"],
+    )
+    calls = make_request_mock(
+        mocker,
+        market_data,
+        {
+            "/public/get_book_summary_by_currency": lambda params: [
+                {"instrument_name": f"{params['currency']}-PERPETUAL"}
+            ]
+        },
+    )
+    df = market_data.get_complete_market_book()
+    assert [params["currency"] for _, params in calls] == ["BTC", "ETH"]
+    assert len(df) == 2
+
+
+def test_get_market_book_both_args_raises(market_data):
+    with pytest.raises(ValueError, match="not both"):
+        market_data.get_market_book(currency="BTC", instrument="BTC-PERPETUAL")

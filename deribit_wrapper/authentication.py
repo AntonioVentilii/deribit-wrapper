@@ -21,6 +21,10 @@ from .utilities import ParamsType, ScopeType, seconds_to_hms
 UNAVAILABLE_MAX_ATTEMPTS = 5
 UNAVAILABLE_WAIT_SECONDS = 60
 
+# requests has no default timeout, so without this a stalled connection
+# blocks the caller indefinitely; override per client via request_timeout
+REQUEST_TIMEOUT_SECONDS = 30
+
 
 class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attributes
     """Authenticate against the Deribit API and issue JSON-RPC requests."""
@@ -54,6 +58,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         self._http_session: Session | None = None
         self.unavailable_max_attempts = UNAVAILABLE_MAX_ATTEMPTS
         self.unavailable_wait_seconds = UNAVAILABLE_WAIT_SECONDS
+        self.request_timeout = REQUEST_TIMEOUT_SECONDS
 
     @property
     def client_id(self) -> str:
@@ -138,7 +143,12 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         if uri.startswith("/private"):
             token = self.access_token
             headers = {"Authorization": "bearer " + token}
-        r = self._session.post(url=self.api_url, data=json.dumps(data), headers=headers)
+        r = self._session.post(
+            url=self.api_url,
+            data=json.dumps(data),
+            headers=headers,
+            timeout=self.request_timeout,
+        )
 
         if give_results:
             ret = r.json()

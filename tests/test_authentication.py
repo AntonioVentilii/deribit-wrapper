@@ -273,3 +273,32 @@ def test_retry_budget_accepts_float_wait(auth_instance):
         auth_instance.unavailable_max_attempts,
         0.5,
     )
+
+
+def test_request_sends_a_timeout(auth_instance, mocker):
+    """Test that every HTTP call carries a timeout so it cannot hang forever."""
+    session = mocker.MagicMock()
+    session.post.return_value.json.return_value = {"result": {"ok": True}}
+    mocker.patch.object(
+        type(auth_instance),
+        "_session",
+        new_callable=mocker.PropertyMock,
+        return_value=session,
+    )
+    auth_instance._request("/public/test", {})
+    assert session.post.call_args.kwargs["timeout"] == auth_instance.request_timeout
+
+
+def test_request_timeout_is_configurable(auth_instance, mocker):
+    """Test that a custom timeout is honoured."""
+    session = mocker.MagicMock()
+    session.post.return_value.json.return_value = {"result": {"ok": True}}
+    mocker.patch.object(
+        type(auth_instance),
+        "_session",
+        new_callable=mocker.PropertyMock,
+        return_value=session,
+    )
+    auth_instance.request_timeout = 5
+    auth_instance._request("/public/test", {})
+    assert session.post.call_args.kwargs["timeout"] == 5

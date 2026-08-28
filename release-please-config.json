@@ -5,7 +5,8 @@
   "packages": {
     ".": {
       "package-name": "deribit_wrapper",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false
     }
   }
 }

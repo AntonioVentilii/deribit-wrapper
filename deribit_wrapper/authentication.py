@@ -1,3 +1,5 @@
+"""Authentication, token lifecycle, and the low-level JSON-RPC request layer."""
+
 from __future__ import absolute_import, annotations
 
 import json
@@ -16,6 +18,8 @@ from .utilities import ParamsType, ScopeType, seconds_to_hms
 
 
 class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attributes
+    """Authenticate against the Deribit API and issue JSON-RPC requests."""
+
     __AUTH = "/public/auth"
 
     __GET_TIME = "/public/get_time"
@@ -30,6 +34,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         private_key: str | bytes | Any | None = None,
         auth_method: str = "credentials",
     ):
+        """Create an authenticated client using credentials, a signature secret, or a private key."""
         super().__init__(env=env)
         self._client_id = None
         self._client_secret = None
@@ -45,18 +50,22 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
 
     @property
     def client_id(self) -> str:
+        """Return the configured client ID."""
         return self._client_id
 
     @property
     def client_secret(self) -> str:
+        """Return the configured client secret."""
         return self._client_secret
 
     @property
     def private_key(self) -> str | bytes | Any | None:
+        """Return the configured private key for asymmetric authentication."""
         return self._private_key
 
     @property
     def auth_method(self) -> str:
+        """Return the authentication method ('credentials', 'signature', or 'asymmetric')."""
         return self._auth_method
 
     def set_credentials(
@@ -66,6 +75,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         private_key: str | bytes | Any | None = None,
         auth_method: str = None,
     ):
+        """Set credentials and infer the authentication method from the inputs."""
         if auth_method is not None:
             self._auth_method = auth_method
 
@@ -242,10 +252,12 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
 
     @property
     def access_token(self) -> str:
+        """Return a valid access token, refreshing it first if expired."""
         self.refresh_token_if_expired()
         return self._access_token
 
     def is_token_expired(self) -> bool:
+        """Return True if the access token is missing or expires within a minute."""
         if self._token_expiry is None or self._access_token is None:
             return True
         current_time = int(time.time())
@@ -253,6 +265,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         return current_time >= self._token_expiry - buffer
 
     def refresh_token_if_expired(self):
+        """Fetch a new access token if the current one is expired."""
         if self.is_token_expired():
             self.get_new_token()
 
@@ -266,6 +279,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         expires_in: int = 0,
         ip: str = "",
     ) -> str:
+        """Build a scope string for token requests from the given permissions."""
         scope_parts = []
 
         if session_name is None:
@@ -371,6 +385,7 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
     def get_new_token(
         self, use_refresh_token_if_available: bool = True, expires_in: int = 0
     ) -> str:
+        """Request a new access token, using the refresh token when available."""
         if self._auth_method == "asymmetric":
             if not self.client_id or not self._private_key:
                 raise ValueError(
@@ -418,25 +433,31 @@ class Authentication(DeribitBase):  # pylint: disable=too-many-instance-attribut
         return self._access_token
 
     def get_time(self) -> int:
+        """Return the current Deribit server time in epoch milliseconds."""
         uri = self.__GET_TIME
         r = self._request(uri, {})
         return r["result"]
 
     def get_status(self) -> dict:
+        """Return the Deribit platform status, including any locked currencies."""
         uri = self.__STATUS
         r = self._request(uri, {})
         return r
 
     def get_locked_currencies(self) -> list[str]:
+        """Return the list of currently locked currencies."""
         return self.get_status().get("locked_currencies", [])
 
     def get_locked_indices(self) -> list[str]:
+        """Return the list of currently locked indices."""
         return self.get_status().get("locked_indices", [])
 
     def test(self) -> dict:
+        """Call the API test endpoint and return its response."""
         uri = self.__TEST
         r = self._request(uri, {})
         return r
 
     def get_api_version(self) -> str:
+        """Return the Deribit API version string."""
         return self.test()["version"]

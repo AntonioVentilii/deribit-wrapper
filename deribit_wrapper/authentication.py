@@ -42,7 +42,7 @@ class Authentication(DeribitBase):
         self._access_token = None
         self._token_expiry = None
         self._refresh_token = None
-        self._http_session = None
+        self._http_session: Session | None = None
 
     @property
     def client_id(self) -> str:

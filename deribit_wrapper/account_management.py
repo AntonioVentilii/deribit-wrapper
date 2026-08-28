@@ -121,8 +121,14 @@ class AccountManagement(MarketData):
     def get_api_key(self, api_key_id: str) -> dict:
         """Return the API key with the given id; raises if no key matches."""
         keys = self.list_api_keys()
-        key = keys[keys["id"] == api_key_id].to_dict(orient="records")
-        return key[0]
+        matches = (
+            keys[keys["id"] == api_key_id].to_dict(orient="records")
+            if not keys.empty
+            else []
+        )
+        if not matches:
+            raise ValueError(f"API key {api_key_id} not found.")
+        return matches[0]
 
     def create_api_key(self, max_scope: str, name: str = None) -> dict:
         """Create an API key with the given maximum scope and optional name."""

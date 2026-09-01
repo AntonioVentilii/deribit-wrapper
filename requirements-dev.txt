@@ -3,7 +3,7 @@ python-dotenv==1.2.3
 pyflakes==3.4.0
 mypy==2.3.1
 pandas-stubs==2.3.2.250926
-types-requests==2.32.4.20250913
+types-requests==2.33.0.20260712
 pylint==4.0.7
 pytest==9.1.1
 pytest-cov==7.1.0

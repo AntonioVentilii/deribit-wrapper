@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deribit_wrapper"
-version = "0.6.4"
+version = "0.6.5"
 description = "A Python wrapper for seamless integration with Deribit's trading API, offering easy access to market data, account management, and trading operations."
 readme = "README.md"
 license = "MIT"

@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5](https://github.com/AntonioVentilii/deribit-wrapper/compare/v0.6.4...v0.6.5) (2026-09-02)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump googleapis/release-please-action from 4.4.0 to 5.0.0 ([#117](https://github.com/AntonioVentilii/deribit-wrapper/issues/117)) ([e260cfd](https://github.com/AntonioVentilii/deribit-wrapper/commit/e260cfd1163b97cd87a9638ad3024cb8b06e5ed5))
+
 ## [0.6.4](https://github.com/AntonioVentilii/deribit-wrapper/compare/v0.6.3...v0.6.4) (2026-08-28)
 
 
